@@ -6,6 +6,7 @@ import { icona, cerchioIcona } from '../util/icone.js';
 import { impostazioni, salvaImpostazioni } from '../model/impostazioni.js';
 import { contiAttivi, contoPerId } from '../model/catalogo.js';
 import { scegliConto, scegliNumero } from '../components/selettori.js';
+import { apriImportazione } from '../components/importa-guidata.js';
 import { VERSIONE_APP, FASE_APP } from '../versione.js';
 
 const TEMI = [['auto', 'Automatico'], ['chiaro', 'Chiaro'], ['scuro', 'Scuro']];
@@ -15,7 +16,6 @@ const VOCI_FUTURE = [
   ['repeat', 'Movimenti ricorrenti', 'Stipendio, PAC, abbonamenti'],
   ['download', 'Backup', 'Esporta e importa in modo cifrato'],
   ['shield-check', 'Sicurezza', 'Sblocco con impronta e PIN'],
-  ['upload', 'Importa dalla vecchia app', 'Porta qui i tuoi dati'],
 ];
 
 const segmentato = (opzioni, attivo, nome) => `
@@ -67,6 +67,10 @@ export function monta(radice) {
       <section class="gruppo">
         <h2 class="gruppo-titolo">Dati e sicurezza</h2>
         <div class="scheda">
+          <button type="button" class="riga-lista" data-az="importa">
+            <span class="cerchio cerchio-neutro">${icona('upload', 20)}</span>
+            <span class="riga-testo"><span class="riga-titolo">Importa dalla vecchia app</span><span class="riga-sotto">Porta qui movimenti, categorie e conti</span></span>${icona('chevron-right', 18)}
+          </button>
           ${VOCI_FUTURE.map(([nomeIcona, titolo, sotto]) => `
             <button type="button" class="riga-lista" disabled aria-disabled="true">
               <span class="cerchio cerchio-neutro">${icona(nomeIcona, 20)}</span>
@@ -137,6 +141,8 @@ export function monta(radice) {
         await salvaImpostazioni({ giornoInizioMese: scelto });
         disegna();
       }
+    } else if (az === 'importa') {
+      apriImportazione();
     } else if (az === 'conto') {
       const scelto = await scegliConto({ titolo: 'Conto predefinito', conti: contiAttivi(), selezionatoId: imp.contoPredefinito });
       if (scelto && scelto !== imp.contoPredefinito) {

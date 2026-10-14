@@ -64,6 +64,37 @@ export function scegliData({ data, oggi }) {
   return ctrl.chiuso;
 }
 
+/**
+ * Foglio con un elenco di scelte (es. "a quale categoria corrisponde?"). Ogni opzione: { id, nome, icona, colore, sotto }.
+ * Risolve con l'id scelto, oppure undefined se l'utente chiude. `nuova` aggiunge in fondo una voce "crea nuovo".
+ */
+export function scegliAbbinamento({ titolo, descrizione = '', opzioni, selezionatoId, nuova = null }) {
+  const ctrl = apriPannello({
+    tipo: 'sheet',
+    etichetta: titolo,
+    riempi(el, c) {
+      const voce = (o) => `
+        <button type="button" class="opzione" role="radio" aria-checked="${o.id === selezionatoId}" data-id="${esc(o.id)}">
+          ${cerchioIcona(o.icona, o.colore, 40)}
+          <span class="opzione-testo">${esc(o.nome)}${o.sotto ? `<br><span class="riga-sotto">${esc(o.sotto)}</span>` : ''}</span>
+          ${o.id === selezionatoId ? `<span class="opzione-spunta">${icona('check', 22)}</span>` : ''}
+        </button>`;
+      el.innerHTML = `
+        <h2 class="foglio-titolo">${esc(titolo)}</h2>
+        <div class="foglio-corpo" role="radiogroup" aria-label="${esc(titolo)}">
+          ${descrizione ? `<p class="riga-sotto">${esc(descrizione)}</p>` : ''}
+          ${opzioni.map(voce).join('')}
+          ${nuova ? voce({ ...nuova, id: '__nuova__' }) : ''}
+        </div>`;
+      el.addEventListener('click', (e) => {
+        const scelta = e.target.closest('[data-id]');
+        if (scelta) c.chiudi(scelta.dataset.id);
+      });
+    },
+  });
+  return ctrl.chiuso;
+}
+
 /** Griglia di numeri (es. il giorno di inizio del mese: 1–28). */
 export function scegliNumero({ titolo, descrizione = '', da, a, selezionato }) {
   const numeri = Array.from({ length: a - da + 1 }, (_, i) => da + i);

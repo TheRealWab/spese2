@@ -6,7 +6,7 @@
 
 // Va tenuta uguale a VERSIONE_APP in js/versione.js (lo verifica un test).
 // Cambiarla a ogni rilascio: cambia il nome della cache e i file vengono riscaricati.
-const VERSIONE = '1.0.7';
+const VERSIONE = '1.1.0';
 const PREFISSO_CACHE = 'spese2-';
 const CACHE = `${PREFISSO_CACHE}${VERSIONE}`;
 
@@ -19,6 +19,7 @@ const FILE = [
   'css/base.css',
   'css/components.css',
   'css/inserimento.css',
+  'css/importa.css',
   'css/viste.css',
   'js/app.js',
   'js/db.js',
@@ -33,6 +34,8 @@ const FILE = [
   'js/model/catalogo.js',
   'js/model/categorie.js',
   'js/model/conti.js',
+  'js/model/importa-vecchia.js',
+  'js/model/importazione.js',
   'js/model/impostazioni.js',
   'js/model/movimenti.js',
   'js/model/palette.js',
@@ -40,6 +43,7 @@ const FILE = [
   'js/views/altro.js',
   'js/views/mese.js',
   'js/views/segnaposto.js',
+  'js/components/importa-guidata.js',
   'js/components/inserimento.js',
   'js/components/pannello.js',
   'js/components/riga-movimento.js',

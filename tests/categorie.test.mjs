@@ -26,17 +26,15 @@ test('categoriePerInserimento: solo il tipo richiesto e niente archiviate', () =
 });
 
 // --- Test dell'ordinamento per uso -----------------------------------------------------------
-// Sono marcati `todo` finché ordinaPerUso (js/model/categorie.js) non è implementata da Alessandro.
-// Descrivono regole valide per QUALSIASI scelta (finestra, pesi, soglia): quando la funzione è
-// pronta, togli `todo: true` e devono passare.
+// Regole valide per qualsiasi scelta di ordinamento per uso (finestra, pesi, soglia).
 
-test('ordinaPerUso: la categoria più usata viene prima', { todo: true }, () => {
+test('ordinaPerUso: la categoria più usata viene prima', () => {
   const lista = ordinaPerUso(categorie.slice(0, 3), [uso('c'), uso('c'), uso('c'), uso('b')], oggi);
   assert.equal(lista[0].id, 'c');
   assert.equal(lista[1].id, 'b');
 });
 
-test('ordinaPerUso: a parità di uso vale l\'ordine manuale', { todo: true }, () => {
+test('ordinaPerUso: a parità di uso vale l\'ordine manuale', () => {
   const lista = ordinaPerUso(categorie.slice(0, 3), [uso('c'), uso('b')], oggi);
   assert.deepEqual(lista.map((c) => c.id), ['b', 'c', 'a']);
 });

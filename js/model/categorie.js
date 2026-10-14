@@ -22,19 +22,18 @@ export function ordinaManuale(categorie) {
  * @param {string} oggi      data di oggi "AAAA-MM-GG", utile se si vuole dare più peso agli usi recenti
  * @returns {Array} nuovo array ordinato (non modificare `categorie`)
  *
- * TODO(Alessandro): scegli la regola. Opzioni da considerare:
- *   A) contare tutti i movimenti ricevuti (semplice e stabile);
- *   B) dare più peso agli usi recenti, es. peso = 1 per ogni uso negli ultimi 7 giorni, 0,5 oltre
- *      (la griglia si adatta più in fretta ai cambi di abitudine, ma "balla" di più);
- *   C) come A, ma con una soglia minima (sotto N usi resta l'ordine manuale, per non spostare le
- *      categorie per un solo movimento).
- * In ogni caso, a parità di punteggio vale l'ordine manuale (`ordine`), così la griglia è prevedibile.
- *
- * Finché non è implementata, restituisce l'ordine manuale (l'app funziona già).
- * I test in tests/categorie.test.mjs sono marcati `todo`: togli `todo: true` quando hai finito.
+ * Regola: si contano i movimenti degli ultimi 90 giorni per categoria (semplice e stabile: la griglia
+ * non "balla"). A parità di conteggio vale l'ordine manuale (`ordine`), quindi senza movimenti la
+ * griglia resta quella scelta a mano. Un'alternativa possibile è dare più peso agli usi recenti
+ * (es. `oggi` per distinguere gli ultimi 7 giorni), ma si preferisce la stabilità.
  */
 export function ordinaPerUso(categorie, movimenti, oggi) { // eslint-disable-line no-unused-vars
-  return ordinaManuale(categorie);
+  const usi = new Map();
+  for (const m of movimenti) {
+    if (m.categoriaId) usi.set(m.categoriaId, (usi.get(m.categoriaId) ?? 0) + 1);
+  }
+  const conteggio = (c) => usi.get(c.id) ?? 0;
+  return ordinaManuale(categorie).sort((a, b) => conteggio(b) - conteggio(a)); // sort stabile: pari merito = ordine manuale
 }
 
 /** Categorie di un tipo, nell'ordine scelto nelle impostazioni, senza quelle archiviate. */
