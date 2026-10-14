@@ -10,6 +10,7 @@ import { esc } from './util/dom.js';
 import { apriInserimento } from './components/inserimento.js';
 import { impostaGestoreIndietro } from './components/pannello.js';
 import { mostraToast } from './components/toast.js';
+import { VERSIONE_APP } from './versione.js';
 import * as mese from './views/mese.js';
 import * as altro from './views/altro.js';
 import { creaVistaSegnaposto } from './views/segnaposto.js';
@@ -142,6 +143,31 @@ function mostraErrore(errore) {
     </div>`;
 }
 
+const CHIAVE_AGGIORNATA = 'spese2_aggiornata';
+
+/** Ricarica l'app per applicare l'aggiornamento, ma mai mentre si sta compilando un movimento. */
+function ricaricaQuandoLibero() {
+  const pannelloAperto = () => document.querySelector('.pannello-sfondo') !== null;
+  const ricarica = () => {
+    try { sessionStorage.setItem(CHIAVE_AGGIORNATA, '1'); } catch { /* facoltativo: serve solo al messaggio */ }
+    location.reload();
+  };
+  if (!pannelloAperto()) { ricarica(); return; }
+  const attesa = setInterval(() => {
+    if (pannelloAperto()) return;
+    clearInterval(attesa);
+    ricarica();
+  }, 1000);
+}
+
+function avvisaSeAggiornata() {
+  try {
+    if (sessionStorage.getItem(CHIAVE_AGGIORNATA) !== '1') return;
+    sessionStorage.removeItem(CHIAVE_AGGIORNATA);
+    mostraToast(`App aggiornata alla versione ${VERSIONE_APP}`);
+  } catch { /* storage non disponibile */ }
+}
+
 async function registraServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   const avevaControllo = Boolean(navigator.serviceWorker.controller);
@@ -149,23 +175,13 @@ async function registraServiceWorker() {
     // Nessun "scope" esplicito: è la cartella dell'app (es. /spese2/), mai l'intera origine condivisa.
     const registrazione = await navigator.serviceWorker.register('./sw.js');
 
-    const proponiAggiornamento = (worker) => mostraToast('Nuova versione disponibile', {
-      durata: 0,
-      azione: { etichetta: 'Aggiorna', alClick: () => worker.postMessage({ tipo: 'attiva' }) },
-    });
-    if (registrazione.waiting && avevaControllo) proponiAggiornamento(registrazione.waiting);
-    registrazione.addEventListener('updatefound', () => {
-      const nuovo = registrazione.installing;
-      nuovo?.addEventListener('statechange', () => {
-        if (nuovo.state === 'installed' && navigator.serviceWorker.controller) proponiAggiornamento(nuovo);
-      });
-    });
-
+    // Aggiornamento automatico: il nuovo service worker si attiva da solo (skipWaiting in sw.js) e,
+    // quando prende il controllo, la pagina si ricarica per usare i file nuovi.
     let ricaricato = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (!avevaControllo || ricaricato) return; // la prima installazione non deve ricaricare la pagina
       ricaricato = true;
-      location.reload();
+      ricaricaQuandoLibero();
     });
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') registrazione.update().catch(() => {});
@@ -192,6 +208,7 @@ async function avvia() {
   impostaGestoreIndietro(gestisciIndietro);
   naviga(rottaDaHash().id);
   alPrimoTocco(preparaCronologia);
+  avvisaSeAggiornata();
 
   window.addEventListener('hashchange', () => naviga(rottaDaHash().id));
   document.addEventListener('spese2:movimenti', (e) => istanza?.aggiorna?.({ evento: 'movimenti', ...e.detail }));

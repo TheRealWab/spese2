@@ -6,7 +6,7 @@
 
 // Va tenuta uguale a VERSIONE_APP in js/versione.js (lo verifica un test).
 // Cambiarla a ogni rilascio: cambia il nome della cache e i file vengono riscaricati.
-const VERSIONE = '1.0.2';
+const VERSIONE = '1.0.3';
 const PREFISSO_CACHE = 'spese2-';
 const CACHE = `${PREFISSO_CACHE}${VERSIONE}`;
 
@@ -57,9 +57,12 @@ const FILE = [
 const SVILUPPO = ['localhost', '127.0.0.1', '[::1]'].includes(self.location.hostname);
 
 self.addEventListener('install', (evento) => {
-  // Niente skipWaiting automatico: una nuova versione resta in attesa finché l'utente non tocca "Aggiorna",
-  // così non si mescolano file vecchi e nuovi durante l'uso.
-  evento.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(FILE)));
+  // La nuova versione si attiva subito, senza aspettare che l'app venga chiusa: la pagina aperta
+  // si ricarica da sola (vedi app.js) e l'utente non deve fare nulla.
+  self.skipWaiting();
+  // cache: 'reload' salta la cache HTTP di GitHub Pages (max-age=600): senza, per ~10 minuti dopo una
+  // pubblicazione la nuova cache potrebbe riempirsi di file vecchi.
+  evento.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(FILE.map((file) => new Request(file, { cache: 'reload' })))));
 });
 
 self.addEventListener('activate', (evento) => {
