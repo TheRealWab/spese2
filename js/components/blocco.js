@@ -3,7 +3,7 @@
 
 import { icona } from '../util/icone.js';
 import { creaTastierinoPin } from './tastierino-pin.js';
-import { sicurezza, serveBlocco, segnaSbloccato, segnaBloccato, segnaNascosta, leggiTentativi, salvaTentativi, azzeraTentativi } from '../model/blocco.js';
+import { sicurezza, serveBlocco, segnaSbloccato, segnaBloccato, segnaNascosta, azzeraNascosta, leggiTentativi, salvaTentativi, azzeraTentativi } from '../model/blocco.js';
 import { verificaPin, registraErrore, attesaRimasta } from '../model/sicurezza.js';
 import { verificaImpronta } from '../model/impronta.js';
 import { cancellaTuttiIDati } from '../model/azzera.js';
@@ -13,19 +13,36 @@ let elemento = null; // la schermata, finché è visibile
 const radice = document.documentElement;
 const rimuoviCopertura = () => { delete radice.dataset.copri; delete radice.dataset.bloccato; };
 
-/** Da chiamare una volta all'avvio: gestisce l'app che va in background e ritorna. */
+/**
+ * Da chiamare una volta all'avvio: gestisce l'app che va in background e ritorna.
+ *
+ * Android scatta la miniatura delle app recenti subito all'inizio del gesto, spesso PRIMA che la pagina risulti
+ * "nascosta": per questo si copre al primo segnale (perdita del focus, uscita dalla pagina) e si scopre solo
+ * quando l'app torna in primo piano. Una pagina web non può impedire la miniatura come fa un'app nativa:
+ * è un tentativo che dipende dalla velocità del telefono.
+ */
 export function inizializzaBlocco() {
+  const copri = () => { if (sicurezza().attiva) radice.dataset.copri = '1'; };
+
+  /** L'app è di nuovo in primo piano: serve lo sblocco, oppure si toglie la copertura. */
+  const alRitorno = ({ riprovaImpronta = false } = {}) => {
+    if (!sicurezza().attiva) return;
+    if (elemento) { if (riprovaImpronta) mostraBlocco(); return; } // già bloccata: nulla da fare
+    if (serveBlocco()) { mostraBlocco(); return; }
+    azzeraNascosta(); // un ritorno rapido non deve far scattare un blocco più tardi
+    rimuoviCopertura();
+  };
+
+  window.addEventListener('blur', copri);
+  window.addEventListener('pagehide', copri);
   document.addEventListener('visibilitychange', () => {
     if (!sicurezza().attiva) return;
-    if (document.visibilityState === 'hidden') {
-      segnaNascosta();
-      radice.dataset.copri = '1'; // le miniature delle app recenti non mostrano i dati
-    } else if (serveBlocco()) {
-      mostraBlocco();
-    } else if (!elemento) {
-      rimuoviCopertura();
-    }
+    if (document.visibilityState === 'hidden') { segnaNascosta(); copri(); } else alRitorno({ riprovaImpronta: true });
   });
+  window.addEventListener('focus', () => { if (document.visibilityState === 'visible') alRitorno(); });
+  window.addEventListener('pageshow', () => alRitorno());
+  // Rete di sicurezza: se per qualche motivo la copertura resta, il primo tocco la toglie (o mostra il blocco).
+  window.addEventListener('pointerdown', () => { if (radice.dataset.copri) alRitorno(); }, true);
 }
 
 /** All'avvio: se serve, mostra il blocco; altrimenti toglie la copertura messa da index.html. */

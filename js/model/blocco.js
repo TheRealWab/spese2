@@ -40,6 +40,11 @@ export function segnaNascosta(adesso = Date.now()) {
   provaStorage(() => sessionStorage.setItem(CHIAVE_NASCOSTA, String(adesso)));
 }
 
+/** L'app è tornata in primo piano senza bisogno di sblocco: si dimentica da quando era in background. */
+export function azzeraNascosta() {
+  provaStorage(() => sessionStorage.removeItem(CHIAVE_NASCOSTA));
+}
+
 export function serveBlocco(adesso = Date.now()) {
   const s = sicurezza();
   return deveBloccare({
