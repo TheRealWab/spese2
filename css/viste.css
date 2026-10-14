@@ -1,0 +1,104 @@
+/* Stili delle aree: Mese, Altro, segnaposto. */
+
+.vista-titolo { margin: var(--sp-2) var(--sp-1) var(--sp-5); font-size: var(--t-xl); }
+
+/* ---- Mese ---- */
+.mese-testata { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-3); }
+.mese-titolo {
+  flex: 1;
+  min-height: var(--tocco);
+  font-size: var(--t-m);
+  font-weight: 650;
+  text-align: center;
+}
+.mese-contenuto { display: grid; gap: var(--sp-4); touch-action: pan-y; }
+.slide-avanti { animation: slide-avanti var(--dur-2) var(--ease) both; }
+.slide-indietro { animation: slide-indietro var(--dur-2) var(--ease) both; }
+@keyframes slide-avanti { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+@keyframes slide-indietro { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+
+/* Indicatore stipendio: la cifra protagonista */
+.indicatore { display: grid; gap: var(--sp-2); padding: var(--sp-5) var(--sp-5) var(--sp-4); }
+.ind-et { font-weight: 600; color: var(--testo-2); }
+.ind-riga { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--sp-3); }
+.ind-valore { font-size: var(--t-hero); font-weight: 750; line-height: 1.1; letter-spacing: -0.03em; }
+.ind-di { font-weight: 550; color: var(--testo-2); }
+.ind-sotto { font-size: var(--t-s); color: var(--testo-2); }
+
+.barra { height: 10px; margin-top: var(--sp-2); overflow: hidden; border-radius: var(--r-pieno); background: var(--scheda-2); }
+.barra-riempi {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accento);
+  transition: width var(--dur-3) var(--ease), background var(--dur-2);
+}
+.stato-attenzione .barra-riempi { background: var(--arancio); }
+.stato-attenzione .ind-sotto { color: var(--arancio); font-weight: 600; }
+.stato-superato .barra-riempi { background: var(--rosso); }
+.stato-superato .ind-et, .stato-superato .ind-valore { color: var(--rosso); }
+.stato-superato .ind-sotto { color: var(--rosso); font-weight: 600; }
+
+.ind-avviso {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--tocco);
+  margin-top: var(--sp-1);
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-m);
+  background: var(--arancio-tenue);
+  color: var(--arancio);
+  font-size: var(--t-s);
+  font-weight: 600;
+  text-align: left;
+}
+.ind-avviso strong { margin-left: auto; color: var(--accento-forte); font-weight: 700; }
+
+/* Riepilogo entrate / spese / risparmio */
+.riepilogo { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); }
+.mini { display: grid; gap: 4px; min-width: 0; padding: var(--sp-3); }
+.mini-et { display: flex; align-items: center; gap: 4px; font-size: var(--t-xs); font-weight: 600; color: var(--testo-2); }
+.mini-entrate .mini-et { color: var(--verde); }
+.mini-valore { font-size: var(--t-m); font-weight: 700; white-space: nowrap; }
+.mini-negativo .mini-valore { color: var(--rosso); }
+
+/* Elenco per giorno */
+.giorno { display: grid; gap: var(--sp-2); }
+.giorno-testata { display: flex; align-items: baseline; justify-content: space-between; padding: 0 var(--sp-2); }
+.giorno-testata h2 { font-size: var(--t-s); font-weight: 650; color: var(--testo-2); }
+.giorno-totale { font-size: var(--t-s); font-weight: 650; color: var(--testo-2); }
+.lista-mov { overflow: hidden; }
+.riga-mov {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  min-height: 68px;
+  padding: var(--sp-3) var(--sp-4);
+  text-align: left;
+  transition: background var(--dur-1);
+}
+.riga-mov + .riga-mov { border-top: 1px solid var(--bordo); }
+.riga-mov:active { background: var(--scheda-2); }
+.mov-testo { display: grid; flex: 1; gap: 1px; min-width: 0; }
+.mov-titolo { overflow: hidden; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.mov-dettaglio { overflow: hidden; font-size: var(--t-s); color: var(--testo-2); text-overflow: ellipsis; white-space: nowrap; }
+.mov-conto { font-size: var(--t-xs); color: var(--testo-3); }
+.mov-importo { font-weight: 650; white-space: nowrap; }
+.importo-entrata { color: var(--verde); }
+.importo-trasferimento { color: var(--testo-2); }
+.appena-aggiunto { animation: evidenzia 1800ms ease-out; }
+@keyframes evidenzia { 0% { background: var(--accento-tenue); } 100% { background: transparent; } }
+
+/* ---- Altro ---- */
+.gruppo + .gruppo { margin-top: var(--sp-5); }
+.riga-colonna { flex-direction: column; align-items: stretch; gap: var(--sp-2); padding-block: var(--sp-3); }
+.nota-fondo { padding: var(--sp-2) var(--sp-2) 0; font-size: var(--t-xs); color: var(--testo-3); }
+
+/* ---- Segnaposto ---- */
+.segnaposto { display: grid; justify-items: center; gap: var(--sp-3); padding: var(--sp-8) var(--sp-5); text-align: center; }
+.segnaposto h2 { font-size: var(--t-l); line-height: 1.2; }
+.segnaposto-elenco { display: grid; gap: var(--sp-3); margin: var(--sp-2) 0 0; padding: 0; list-style: none; text-align: left; }
+.segnaposto-elenco li { display: flex; align-items: flex-start; gap: 10px; color: var(--testo-2); }
+.segnaposto-spunta { margin-top: 2px; color: var(--accento); }

@@ -1,0 +1,233 @@
+/* Pannello di inserimento / modifica movimenti (SPEC §5). Pensato per 360–412 px di larghezza. */
+
+.pannello-pieno .pannello-contenuto { height: 100%; }
+
+.ins {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding-top: var(--safe-sopra);
+  overflow: hidden;
+  --su-colore: light-dark(#ffffff, #101018); /* icona sopra al colore pieno della categoria */
+}
+
+/* ---- Testata: chiudi · tipo · elimina ---- */
+.ins-testata {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-2) 0;
+}
+.ins-tipi { flex: 1; grid-template-columns: 1fr 1fr 1.4fr; }
+
+/* ---- Importo ---- */
+.ins-importo {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: 76px;
+  padding: var(--sp-2) var(--sp-4);
+}
+.ins-valore {
+  font-size: 3.25rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.ins-valore[data-misura="m"] { font-size: 2.5rem; }
+.ins-valore[data-misura="s"] { font-size: 2rem; }
+.ins-valore.vuoto { color: var(--testo-3); }
+.ins-valore::after {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 0.8em;
+  margin-left: 3px;
+  vertical-align: -0.05em;
+  border-radius: 2px;
+  background: var(--accento);
+  animation: cursore 1s steps(2, start) infinite;
+}
+@keyframes cursore { to { visibility: hidden; } }
+.ins-valuta { font-size: 1.75rem; font-weight: 600; color: var(--testo-2); }
+.ins[data-tipo="entrata"] .ins-valore:not(.vuoto) { color: var(--verde); }
+
+/* ---- Corpo: griglia categorie o trasferimento ---- */
+.ins-corpo {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0 var(--sp-3);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.griglia-cat { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-1) 0; }
+.cat-voce {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--tocco);
+  padding: var(--sp-1) 2px;
+  border-radius: var(--r-m);
+}
+.cat-voce .cerchio { transition: transform var(--dur-1) var(--ease), background var(--dur-1), color var(--dur-1), box-shadow var(--dur-1); }
+.cat-voce:active .cerchio { transform: scale(0.92); }
+.cat-nome {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.3em;
+  font-size: var(--t-xs);
+  font-weight: 550;
+  line-height: 1.15;
+  text-align: center;
+  color: var(--testo-2);
+}
+.cat-voce[aria-checked="true"] .cerchio {
+  background: var(--c);
+  color: var(--su-colore);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 30%, transparent);
+}
+.cat-voce[aria-checked="true"] .cat-nome { color: var(--testo); font-weight: 700; }
+
+/* Trasferimento: due schede conto con il pulsante per invertirle in mezzo */
+.trasf { display: grid; gap: var(--sp-2); padding: var(--sp-2) var(--sp-1); }
+.trasf-conto {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  min-height: 68px;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-l);
+  background: var(--scheda);
+  box-shadow: var(--ombra);
+  text-align: left;
+  color: var(--testo-2);
+}
+.trasf-testo { display: grid; flex: 1; min-width: 0; }
+.trasf-nome { overflow: hidden; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; color: var(--testo); }
+.trasf-scambia {
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  width: var(--tocco);
+  height: var(--tocco);
+  margin: -22px 0;
+  border: 4px solid var(--sfondo);
+  border-radius: 50%;
+  background: var(--accento-tenue);
+  color: var(--accento);
+}
+.trasf-scambia .icona { transform: rotate(90deg); }
+
+/* ---- Campi secondari ---- */
+.ins-secondario { display: grid; flex: none; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3) 0; }
+.ins-riga-a { display: flex; gap: var(--sp-2); }
+.chip-conto { flex: 1 1 auto; min-width: 0; }
+.chip-data { flex: none; }
+.chip-testo { overflow: hidden; text-overflow: ellipsis; }
+.ins-riga-b {
+  display: flex;
+  gap: var(--sp-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+  mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+}
+.ins-riga-b::-webkit-scrollbar { display: none; }
+.chip-nota { flex: none; max-width: 60%; }
+.chip-sugg { flex: none; background: var(--scheda); box-shadow: var(--ombra); }
+.ins-sugg-wrap { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+
+.ins-editor-nota { display: flex; align-items: center; gap: var(--sp-2); }
+.campo-nota {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--tocco);
+  padding: 0 var(--sp-4);
+  border: 1px solid var(--bordo);
+  border-radius: var(--r-pieno);
+  background: var(--scheda);
+  font-size: var(--t-m);
+}
+.campo-nota:focus { border-color: var(--accento); outline: 2px solid var(--accento); outline-offset: -1px; }
+.btn-fatto { background: var(--accento); color: var(--accento-testo); }
+
+/* Durante la scrittura della nota: via tastierino e categorie, restano nota, suggerimenti e Salva */
+.ins.modo-nota .ins-corpo, .ins.modo-nota .ins-tastierino { display: none; }
+.ins.modo-nota .ins-secondario { flex: 1 1 auto; align-content: start; overflow-y: auto; }
+
+/* ---- Tastierino ---- */
+.ins-tastierino { flex: none; padding: var(--sp-2) var(--sp-3) 0; }
+.tastierino { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-1); }
+.tasto {
+  display: grid;
+  place-items: center;
+  height: 46px;
+  border-radius: var(--r-m);
+  font-size: 1.5rem;
+  font-weight: 550;
+  transition: background var(--dur-1);
+}
+.tasto:active { background: var(--scheda-3); }
+.tasto-azione { color: var(--testo-2); }
+
+/* ---- Salva ---- */
+.ins-azioni { flex: none; padding: var(--sp-2) var(--sp-4) calc(var(--sp-2) + var(--safe-sotto)); }
+.pulsante.incompleto { opacity: 0.5; }
+
+/* ---- Feedback ---- */
+.scuoti { animation: scuoti 360ms var(--ease); }
+@keyframes scuoti {
+  20% { transform: translateX(-9px); }
+  40% { transform: translateX(9px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+}
+.sollecito .cerchio { animation: sollecito 520ms ease 2; }
+@keyframes sollecito { 50% { transform: scale(1.14); } }
+
+.ins-ok {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--sp-4);
+  background: color-mix(in srgb, var(--sfondo) 90%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  font-size: var(--t-m);
+  font-weight: 650;
+  animation: ok-sfondo var(--dur-2) both;
+}
+.ins-ok-cerchio {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: var(--verde);
+  color: light-dark(#ffffff, #07140c);
+  animation: ok-pop 420ms cubic-bezier(0.3, 1.5, 0.5, 1) both;
+}
+.ins-ok .icona path { stroke-dasharray: 26; stroke-dashoffset: 26; animation: ok-segno 360ms 160ms ease-out forwards; }
+@keyframes ok-sfondo { from { opacity: 0; } }
+@keyframes ok-pop { from { opacity: 0; transform: scale(0.5); } }
+@keyframes ok-segno { to { stroke-dashoffset: 0; } }
+
+/* Schermi bassi (es. 360×740): tastierino e importo più compatti, così le 12 categorie restano tutte in vista */
+@media (max-height: 780px) {
+  .ins-importo { min-height: 64px; }
+  .ins-valore { font-size: 2.75rem; }
+  .tasto { height: 40px; font-size: 1.375rem; }
+  .cat-voce { padding-block: 2px; }
+  .cat-nome { min-height: 2.3em; }
+}

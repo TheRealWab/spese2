@@ -1,0 +1,101 @@
+/* Reset, tipografia di base, struttura dell'app. I valori vengono da tokens.css. */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--sfondo);
+  color: var(--testo);
+  font: 400 var(--t-base) / 1.4 var(--font);
+  font-variant-numeric: tabular-nums;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+body.pannello-aperto { overflow: hidden; }
+
+h1, h2, h3, p { margin: 0; }
+h1, h2, h3 { font-weight: 650; letter-spacing: -0.01em; }
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+button:disabled { cursor: default; }
+
+:focus-visible {
+  outline: 2px solid var(--accento);
+  outline-offset: 2px;
+}
+
+[hidden] { display: none !important; }
+
+.solo-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---- Icone Lucide ---- */
+.icona {
+  flex: none;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: var(--spessore-icona);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---- Struttura ---- */
+#app {
+  max-width: var(--larghezza-max);
+  margin: 0 auto;
+  min-height: 100dvh;
+}
+
+#vista {
+  padding: calc(var(--sp-4) + var(--safe-sopra)) var(--sp-4)
+    calc(var(--nav-h) + var(--safe-sotto) + var(--fab) + var(--sp-8));
+  outline: none;
+}
+
+.vista-entra { animation: vista-entra var(--dur-2) var(--ease) both; }
+
+@keyframes vista-entra {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---- Movimento ridotto ---- */
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-1: 1ms; --dur-2: 1ms; --dur-3: 1ms; }
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}

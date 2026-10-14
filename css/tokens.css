@@ -1,0 +1,102 @@
+/* ==========================================================================
+   Design tokens — unico punto in cui vivono colori, spaziature, raggi, tipografia.
+   Tema: segue il sistema (color-scheme: light dark). La scelta manuale imposta
+   data-tema="chiaro|scuro" su <html>. light-dark(chiaro, scuro) sceglie il valore.
+   ========================================================================== */
+
+:root {
+  color-scheme: light dark;
+
+  /* ---- Superfici ---- */
+  --sfondo: light-dark(#f3f4f8, #0a0b0f);
+  --scheda: light-dark(#ffffff, #17181d);
+  --scheda-2: light-dark(#eef0f5, #22242b);      /* elementi incassati dentro le schede */
+  --scheda-3: light-dark(#e5e8ef, #2c2f38);
+  --bordo: light-dark(#e3e5ed, #2a2c34);
+  --velo: light-dark(rgb(15 17 30 / 0.42), rgb(0 0 0 / 0.6));  /* sfondo dietro ai pannelli */
+
+  /* ---- Testo ---- */
+  --testo: light-dark(#14151a, #f2f3f7);
+  --testo-2: light-dark(#4d5162, #a9adbc);        /* secondario */
+  --testo-3: light-dark(#697083, #8a8ea0);        /* terziario / segnaposto */
+
+  /* ---- Accento (unico) ---- */
+  --accento: light-dark(#4f46e5, #8b8cff);
+  --accento-forte: light-dark(#4338ca, #a3a4ff);
+  --accento-testo: light-dark(#ffffff, #0d0d1c);  /* testo sopra l'accento */
+  --accento-tenue: light-dark(#e8e7fd, #25264a);
+
+  /* ---- Semantici ---- */
+  --verde: light-dark(#0b7d48, #3ddc84);
+  --verde-tenue: light-dark(#dcf5e8, #14301f);
+  --rosso: light-dark(#cf2b3a, #ff6b78);
+  --rosso-tenue: light-dark(#fde4e6, #3a1a1e);
+  --arancio: light-dark(#c2620a, #ffb04a);
+  --arancio-tenue: light-dark(#fdeed9, #382a14);
+
+  /* ---- Tavolozza categorie: un colore, una sola identità ovunque ---- */
+  --cat-corallo: light-dark(#e5484d, #ff7b80);
+  --cat-arancio: light-dark(#e8710a, #ffa047);
+  --cat-ambra: light-dark(#b7791f, #f5c04a);
+  --cat-lime: light-dark(#5f9d12, #a8e05a);
+  --cat-verde: light-dark(#1f9d55, #4ade80);
+  --cat-smeraldo: light-dark(#0b8f6a, #34d3a0);
+  --cat-turchese: light-dark(#0e8f9c, #3dd6e0);
+  --cat-ciano: light-dark(#0891c7, #4cc3f0);
+  --cat-azzurro: light-dark(#2f7de1, #6aa8ff);
+  --cat-blu: light-dark(#3b5bdb, #8aa0ff);
+  --cat-indaco: light-dark(#5b4fe0, #a79bff);
+  --cat-viola: light-dark(#9b4fd8, #c791ff);
+  --cat-fucsia: light-dark(#cf3ba8, #f27fd3);
+  --cat-rosa: light-dark(#e23f7b, #ff86ae);
+  --cat-ardesia: light-dark(#5f6b7e, #a3aec2);
+
+  /* ---- Ombre (light-dark accetta solo colori: cambia il colore, non la forma) ---- */
+  --ombra-colore: light-dark(rgb(24 26 60 / 0.08), rgb(0 0 0 / 0));
+  --ombra: 0 2px 12px var(--ombra-colore);
+  --ombra-alta: 0 8px 28px light-dark(rgb(24 26 60 / 0.18), rgb(0 0 0 / 0.5));
+
+  /* ---- Spaziature ---- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+
+  /* ---- Raggi ---- */
+  --r-s: 10px;
+  --r-m: 14px;
+  --r-l: 20px;
+  --r-xl: 28px;
+  --r-pieno: 999px;
+
+  /* ---- Tipografia ---- */
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --t-xs: 0.75rem;     /* 12 */
+  --t-s: 0.8125rem;    /* 13 */
+  --t-base: 0.9375rem; /* 15 */
+  --t-m: 1.0625rem;    /* 17 */
+  --t-l: 1.3125rem;    /* 21 */
+  --t-xl: 1.75rem;     /* 28 */
+  --t-hero: 2.625rem;  /* 42 — la cifra protagonista */
+  --spessore-icona: 2; /* stesso tratto Lucide ovunque */
+
+  /* ---- Layout ---- */
+  --nav-h: 64px;
+  --fab: 56px;
+  --safe-sotto: env(safe-area-inset-bottom, 0px);
+  --safe-sopra: env(safe-area-inset-top, 0px);
+  --larghezza-max: 640px;
+  --tocco: 44px;       /* area minima toccabile */
+
+  /* ---- Movimento ---- */
+  --dur-1: 150ms;
+  --dur-2: 250ms;
+  --dur-3: 400ms;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+:root[data-tema="chiaro"] { color-scheme: light; }
+:root[data-tema="scuro"] { color-scheme: dark; }
