@@ -102,3 +102,6 @@
 .segnaposto-elenco { display: grid; gap: var(--sp-3); margin: var(--sp-2) 0 0; padding: 0; list-style: none; text-align: left; }
 .segnaposto-elenco li { display: flex; align-items: flex-start; gap: 10px; color: var(--testo-2); }
 .segnaposto-spunta { margin-top: 2px; color: var(--accento); }
+
+/* Voce che richiede attenzione (es. backup mai fatto o vecchio) */
+.badge-avviso { background: var(--arancio-tenue); color: var(--arancio); }

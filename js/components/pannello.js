@@ -90,7 +90,12 @@ export function apriPannello({ tipo = 'sheet', etichetta = '', riempi }) {
   if (tipo !== 'pieno') {
     sfondo.addEventListener('pointerdown', (e) => { if (e.target === sfondo) ctrl.chiudi(undefined); });
   }
-  riempi(contenuto, ctrl);
+  try {
+    riempi(contenuto, ctrl);
+  } catch (errore) {
+    ctrl.chiudi(undefined); // un errore nel disegno non deve lasciare un pannello vuoto e una voce di cronologia in più
+    throw errore;
+  }
   pannello.focus({ preventScroll: true });
   return ctrl;
 }

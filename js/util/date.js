@@ -33,6 +33,13 @@ export function aggiungiGiorni(iso, n) {
   return aIso(d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate());
 }
 
+/** Giorni interi tra due date (a − da): positivo se `a` è dopo `da`. */
+export function giorniTra(da, a) {
+  const x = daIso(da);
+  const y = daIso(a);
+  return Math.round((Date.UTC(y.a, y.m - 1, y.g) - Date.UTC(x.a, x.m - 1, x.g)) / 86400000);
+}
+
 /** Somma mesi; se il giorno non esiste nel mese di arrivo usa l'ultimo (31 gen + 1 mese = 28/29 feb). */
 export function aggiungiMesi(iso, n) {
   const { a, m, g } = daIso(iso);

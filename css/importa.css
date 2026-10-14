@@ -1,64 +1,6 @@
-/* Procedura guidata di importazione (a tutto schermo). */
-
-.imp {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding-top: var(--safe-sopra);
-}
-
-.imp-testata {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-2);
-}
-.imp-titolo { flex: 1; min-width: 0; font-size: var(--t-m); }
-.imp-passo { font-size: var(--t-s); font-weight: 600; color: var(--testo-3); white-space: nowrap; }
-
-.imp-corpo {
-  flex: 1;
-  display: grid;
-  grid-auto-rows: max-content; /* le righe non si restringono: l'area scorre invece di schiacciare i riquadri */
-  align-content: start;
-  gap: var(--sp-4);
-  padding: var(--sp-2) var(--sp-4) var(--sp-6);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-.imp-piede { flex: none; padding: var(--sp-2) var(--sp-4) calc(var(--sp-3) + var(--safe-sotto)); }
-.imp-piede:empty { display: none; }
-
-.imp-guida { color: var(--testo-2); }
-
-.imp-intro { display: grid; justify-items: start; gap: var(--sp-3); padding: var(--sp-5); }
-.imp-intro h3 { font-size: var(--t-l); }
-.imp-intro p { color: var(--testo-2); }
-
-.imp-errore, .imp-nota {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--sp-2);
-  padding: var(--sp-3) var(--sp-4);
-  border-radius: var(--r-m);
-  font-size: var(--t-s);
-  font-weight: 600;
-}
-.imp-errore { background: var(--rosso-tenue); color: var(--rosso); }
-.imp-nota { background: var(--verde-tenue); color: var(--verde); }
-.imp-nota-avviso { background: var(--arancio-tenue); color: var(--arancio); }
-.imp-errore .icona, .imp-nota .icona { flex: none; margin-top: 1px; }
+/* Procedura guidata di importazione dalla vecchia app (le parti in comune stanno in flusso.css). */
 
 .imp-conto { overflow: hidden; }
 .imp-verso { display: flex; align-items: center; gap: 4px; font-size: var(--t-s); font-weight: 600; color: var(--accento-forte); }
 .imp-rinomina { min-height: 0; padding-block: var(--sp-2) var(--sp-3); }
-
-.imp-attesa { min-height: 50dvh; align-content: center; }
-.imp-attesa .icona { animation: gira 1s linear infinite; }
-@keyframes gira { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .imp-attesa .icona { animation: none; } }
-
-.imp-esito { display: grid; justify-items: center; gap: var(--sp-3); padding: var(--sp-6) 0 var(--sp-2); text-align: center; }
-.imp-esito ul { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; color: var(--testo-2); }
 .imp-saldo { color: var(--testo); font-size: var(--t-base); }

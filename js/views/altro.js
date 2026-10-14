@@ -5,8 +5,12 @@ import { $, esc } from '../util/dom.js';
 import { icona, cerchioIcona } from '../util/icone.js';
 import { impostazioni, salvaImpostazioni } from '../model/impostazioni.js';
 import { contiAttivi, contoPerId } from '../model/catalogo.js';
-import { scegliConto, scegliNumero } from '../components/selettori.js';
+import { scegliConto, scegliNumero, scegliAbbinamento } from '../components/selettori.js';
 import { apriImportazione } from '../components/importa-guidata.js';
+import { apriEsportaBackup } from '../components/backup-esporta.js';
+import { apriRipristinaBackup } from '../components/backup-ripristina.js';
+import { statoUltimoBackup, descriviUltimoBackup } from '../model/backup.js';
+import { oggiIso } from '../util/date.js';
 import { VERSIONE_APP, FASE_APP } from '../versione.js';
 
 const TEMI = [['auto', 'Automatico'], ['chiaro', 'Chiaro'], ['scuro', 'Scuro']];
@@ -14,7 +18,6 @@ const ORDINI = [['frequenza', 'Più usate'], ['manuale', 'Manuale']];
 
 const VOCI_FUTURE = [
   ['repeat', 'Movimenti ricorrenti', 'Stipendio, PAC, abbonamenti'],
-  ['download', 'Backup', 'Esporta e importa in modo cifrato'],
   ['shield-check', 'Sicurezza', 'Sblocco con impronta e PIN'],
 ];
 
@@ -28,6 +31,7 @@ export function monta(radice) {
     const imp = impostazioni();
     const conto = contoPerId(imp.contoPredefinito);
     const giorno = imp.giornoInizioMese;
+    const backup = statoUltimoBackup(imp.ultimoBackup, oggiIso());
 
     radice.innerHTML = `
       <h1 class="vista-titolo">Altro</h1>
@@ -70,6 +74,11 @@ export function monta(radice) {
           <button type="button" class="riga-lista" data-az="importa">
             <span class="cerchio cerchio-neutro">${icona('upload', 20)}</span>
             <span class="riga-testo"><span class="riga-titolo">Importa dalla vecchia app</span><span class="riga-sotto">Porta qui movimenti, categorie e conti</span></span>${icona('chevron-right', 18)}
+          </button>
+          <button type="button" class="riga-lista" data-az="backup">
+            <span class="cerchio cerchio-neutro">${icona('download', 20)}</span>
+            <span class="riga-testo"><span class="riga-titolo">Backup</span><span class="riga-sotto">${descriviUltimoBackup(backup)}</span></span>
+            ${backup.daFare ? '<span class="badge badge-avviso">Da fare</span>' : ''}${icona('chevron-right', 18)}
           </button>
           ${VOCI_FUTURE.map(([nomeIcona, titolo, sotto]) => `
             <button type="button" class="riga-lista" disabled aria-disabled="true">
@@ -143,6 +152,16 @@ export function monta(radice) {
       }
     } else if (az === 'importa') {
       apriImportazione();
+    } else if (az === 'backup') {
+      const scelta = await scegliAbbinamento({
+        titolo: 'Backup',
+        opzioni: [
+          { id: 'esporta', nome: 'Crea un backup cifrato', icona: 'download', colore: 'indaco', sotto: 'Un file protetto da password, da conservare al sicuro' },
+          { id: 'ripristina', nome: 'Ripristina da un backup', icona: 'upload', colore: 'azzurro', sotto: 'Unisci o sostituisci i dati con un file di backup' },
+        ],
+      });
+      if (scelta === 'esporta') apriEsportaBackup();
+      else if (scelta === 'ripristina') apriRipristinaBackup();
     } else if (az === 'conto') {
       const scelto = await scegliConto({ titolo: 'Conto predefinito', conti: contiAttivi(), selezionatoId: imp.contoPredefinito });
       if (scelto && scelto !== imp.contoPredefinito) {

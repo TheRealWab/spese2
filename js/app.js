@@ -119,14 +119,21 @@ function mostra(rotta) {
 
 const MESSAGGIO_USCITA = 'Premi ancora il tasto indietro per uscire dall\'app';
 
+// Dopo una ricarica la cronologia c'è già se la voce corrente è una delle nostre (app/area/base) o di un pannello.
+let cronologiaPronta = false;
+
 /** A ogni tocco: se la cronologia non è pronta (primo tocco) o siamo rimasti sulla base (dopo l'avviso), la ripristina. */
 function preparaCronologia() {
   const tipo = history.state?.spese2;
   if (tipo === 'base') {
     history.pushState({ spese2: 'app' }, '', '#/mese'); // l'utente è rimasto: si risale sopra la base
+    cronologiaPronta = true;
     return;
   }
-  if (tipo) return; // app o area: tutto a posto (anche dopo una ricarica della pagina)
+  // Con un pannello aperto lo stato è { pannello }, non { spese2 }: senza questo segno ogni tocco dentro
+  // un pannello rifarebbe la cronologia da capo.
+  if (cronologiaPronta || tipo || history.state?.pannello !== undefined) { cronologiaPronta = true; return; }
+  cronologiaPronta = true;
   const area = rottaCorrente?.id ?? 'mese';
   history.replaceState({ spese2: 'base' }, '', '#/mese');
   history.pushState({ spese2: 'app' }, '', '#/mese');

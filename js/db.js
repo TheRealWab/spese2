@@ -90,6 +90,19 @@ export async function salvaGruppo(perArchivio) {
   return transazioneCompletata(tx);
 }
 
+/** Svuota e riempie gli archivi indicati in un'unica transazione: se qualcosa fallisce, non cambia nulla. */
+export async function sostituisciArchivi(perArchivio) {
+  const nomi = Object.keys(perArchivio);
+  const db = await apriDb();
+  const tx = db.transaction(nomi, 'readwrite');
+  for (const [nome, oggetti] of Object.entries(perArchivio)) {
+    const store = tx.objectStore(nome);
+    store.clear();
+    for (const oggetto of oggetti) store.put(oggetto);
+  }
+  return transazioneCompletata(tx);
+}
+
 export async function elimina(nome, id) {
   const { tx, store } = await archivio(nome, 'readwrite');
   store.delete(id);

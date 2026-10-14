@@ -1,0 +1,77 @@
+/* Schermate a tutto schermo "a passi" (importazione, backup): testata, corpo che scorre, piede con il pulsante. */
+
+.flusso {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding-top: var(--safe-sopra);
+}
+
+.flusso-testata {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-2);
+}
+.flusso-titolo { flex: 1; min-width: 0; font-size: var(--t-m); }
+.flusso-passo { font-size: var(--t-s); font-weight: 600; color: var(--testo-3); white-space: nowrap; }
+
+.flusso-corpo {
+  flex: 1;
+  display: grid;
+  grid-auto-rows: max-content; /* le righe non si restringono: l'area scorre invece di schiacciare i riquadri */
+  align-content: start;
+  gap: var(--sp-4);
+  padding: var(--sp-2) var(--sp-4) var(--sp-6);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.flusso-piede { flex: none; padding: var(--sp-2) var(--sp-4) calc(var(--sp-3) + var(--safe-sotto)); }
+.flusso-piede:empty { display: none; }
+
+.flusso-guida { color: var(--testo-2); }
+
+.flusso-errore, .flusso-nota {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-m);
+  font-size: var(--t-s);
+  font-weight: 600;
+}
+.flusso-errore { background: var(--rosso-tenue); color: var(--rosso); }
+.flusso-nota { background: var(--verde-tenue); color: var(--verde); }
+.flusso-nota-avviso { background: var(--arancio-tenue); color: var(--arancio); }
+.flusso-errore .icona, .flusso-nota .icona { flex: none; margin-top: 1px; }
+
+.flusso-intro { display: grid; justify-items: start; gap: var(--sp-3); padding: var(--sp-5); }
+.flusso-intro h3 { font-size: var(--t-l); }
+.flusso-intro p { color: var(--testo-2); }
+
+.flusso-attesa { min-height: 50dvh; align-content: center; }
+.flusso-attesa .icona { animation: gira 1s linear infinite; }
+@keyframes gira { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .flusso-attesa .icona { animation: none; } }
+
+.flusso-esito { display: grid; justify-items: center; gap: var(--sp-3); padding: var(--sp-6) 0 var(--sp-2); text-align: center; }
+.flusso-esito ul { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; color: var(--testo-2); }
+
+/* Campi di testo (password) */
+.campo { display: grid; gap: var(--sp-1); }
+.campo label { font-size: var(--t-s); font-weight: 600; color: var(--testo-2); }
+.campo-testo {
+  width: 100%;
+  min-height: var(--tocco);
+  padding: 0 var(--sp-4);
+  border: 1px solid var(--bordo);
+  border-radius: var(--r-m);
+  background: var(--scheda);
+  color: var(--testo);
+}
+.campo-testo:focus-visible { outline: 2px solid var(--accento); outline-offset: 1px; }
+
+.campo-gruppo { display: grid; gap: var(--sp-3); justify-items: stretch; }
+.campo-gruppo .chip { justify-self: start; }
+.opzioni { display: grid; gap: var(--sp-2); }

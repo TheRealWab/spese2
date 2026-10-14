@@ -40,14 +40,14 @@ export function apriImportazione() {
     const corpo = { 1: corpoFile, 2: corpoAnteprima, 3: corpoCategorie, 4: corpoConti, 5: corpoEsito }[passo]();
     const puoTornare = passo > 1 && passo < 5;
     radice.innerHTML = `
-      <div class="imp">
-        <header class="imp-testata">
+      <div class="flusso">
+        <header class="flusso-testata">
           <button type="button" class="btn-icona" data-az="${puoTornare ? 'indietro' : 'chiudi'}" aria-label="${puoTornare ? 'Passo precedente' : 'Chiudi'}">${icona(puoTornare ? 'chevron-left' : 'x', 24)}</button>
-          <h2 class="imp-titolo">Importa dalla vecchia app</h2>
-          <span class="imp-passo">${passo} di ${PASSI}</span>
+          <h2 class="flusso-titolo">Importa dalla vecchia app</h2>
+          <span class="flusso-passo">${passo} di ${PASSI}</span>
         </header>
-        <div class="imp-corpo" data-r="corpo">${corpo.html}</div>
-        <footer class="imp-piede">${corpo.piede}</footer>
+        <div class="flusso-corpo" data-r="corpo">${corpo.html}</div>
+        <footer class="flusso-piede">${corpo.piede}</footer>
       </div>`;
   }
 
@@ -56,13 +56,13 @@ export function apriImportazione() {
   function corpoFile() {
     return {
       html: `
-        <section class="scheda imp-intro">
+        <section class="scheda flusso-intro">
           <span class="cerchio col-indaco" style="--dim:56px">${icona('upload', 28)}</span>
           <h3>Porta qui i dati della vecchia app</h3>
           <p>Scegli il file di esportazione (.json) salvato dalla vecchia app. Il file resta su questo telefono: non viene inviato da nessuna parte.</p>
           <p>Non viene cancellato nulla: i dati si aggiungono a quelli già presenti, e importare due volte lo stesso file non crea doppioni.</p>
         </section>
-        ${stato.errore ? `<p class="imp-errore" role="alert">${icona('triangle-alert', 18)}<span>${esc(stato.errore)}</span></p>` : ''}
+        ${stato.errore ? `<p class="flusso-errore" role="alert">${icona('triangle-alert', 18)}<span>${esc(stato.errore)}</span></p>` : ''}
         <input type="file" id="imp-file" accept=".json,application/json" hidden>`,
       piede: '<button type="button" class="pulsante pulsante-grande" data-az="scegli-file">Scegli il file</button>',
     };
@@ -100,15 +100,15 @@ export function apriImportazione() {
       </div>`;
     return {
       html: `
-        <p class="imp-guida">Ecco cosa c'è nel file. Nulla è stato ancora importato.</p>
+        <p class="flusso-guida">Ecco cosa c'è nel file. Nulla è stato ancora importato.</p>
         <div class="scheda">
           ${riga('list-checks', 'Movimenti', `${plurale(c.spese, 'spesa', 'spese')} · ${plurale(c.entrate, 'entrata', 'entrate')} · ${plurale(c.versamenti, 'versamento', 'versamenti')} verso investimenti`, String(analisi.movimenti.length))}
           ${riga('calendar-days', 'Periodo coperto', `dal ${dataLunga(analisi.periodo.da)}<br>al ${dataLunga(analisi.periodo.a)}`, '')}
           ${riga('layout-grid', 'Categorie', `${scelte.categorie.length - nuove} già presenti · ${nuove} da creare`, String(scelte.categorie.length))}
           ${riga('landmark', 'Conti', 'da abbinare al passo 4', String(scelte.conti.length))}
         </div>
-        ${duplicati ? `<p class="imp-nota">${icona('circle-check', 18)}<span>${plurale(duplicati, 'movimento è', 'movimenti sono')} già in questa app e verr${duplicati === 1 ? 'à' : 'anno'} saltat${duplicati === 1 ? 'o' : 'i'}.</span></p>` : ''}
-        ${analisi.scartati.length ? `<p class="imp-nota imp-nota-avviso">${icona('triangle-alert', 18)}<span>${plurale(analisi.scartati.length, 'movimento non è valido e non verrà importato', 'movimenti non sono validi e non verranno importati')}.</span></p>` : ''}`,
+        ${duplicati ? `<p class="flusso-nota">${icona('circle-check', 18)}<span>${plurale(duplicati, 'movimento è', 'movimenti sono')} già in questa app e verr${duplicati === 1 ? 'à' : 'anno'} saltat${duplicati === 1 ? 'o' : 'i'}.</span></p>` : ''}
+        ${analisi.scartati.length ? `<p class="flusso-nota flusso-nota-avviso">${icona('triangle-alert', 18)}<span>${plurale(analisi.scartati.length, 'movimento non è valido e non verrà importato', 'movimenti non sono validi e non verranno importati')}.</span></p>` : ''}`,
       piede: '<button type="button" class="pulsante pulsante-grande" data-az="avanti">Continua</button>',
     };
   }
@@ -141,7 +141,7 @@ export function apriImportazione() {
       : '');
     return {
       html: `
-        <p class="imp-guida">Abbino le categorie per nome. Quelle senza corrispondenza diventano categorie nuove: tocca una riga per sceglierne un'altra.</p>
+        <p class="flusso-guida">Abbino le categorie per nome. Quelle senza corrispondenza diventano categorie nuove: tocca una riga per sceglierne un'altra.</p>
         ${gruppo('Da controllare', daControllare)}
         ${gruppo('Abbinate automaticamente', automatiche)}`,
       piede: '<button type="button" class="pulsante pulsante-grande" data-az="avanti">Continua</button>',
@@ -226,10 +226,10 @@ export function apriImportazione() {
 
     return {
       html: `
-        <p class="imp-guida">Abbino i conti. Chi ha lo stesso nome è già abbinato; gli altri vanno su un conto ancora vuoto dello stesso tipo, che puoi rinominare. Il saldo del file diventa il saldo di partenza.</p>
+        <p class="flusso-guida">Abbino i conti. Chi ha lo stesso nome è già abbinato; gli altri vanno su un conto ancora vuoto dello stesso tipo, che puoi rinominare. Il saldo del file diventa il saldo di partenza.</p>
         ${righe}
         ${senzaConto}
-        ${stato.errore ? `<p class="imp-errore" role="alert">${icona('triangle-alert', 18)}<span>${esc(stato.errore)}</span></p>` : ''}`,
+        ${stato.errore ? `<p class="flusso-errore" role="alert">${icona('triangle-alert', 18)}<span>${esc(stato.errore)}</span></p>` : ''}`,
       piede: '<button type="button" class="pulsante pulsante-grande" data-az="importa">Importa</button>',
     };
   }
@@ -285,7 +285,7 @@ export function apriImportazione() {
 
   function corpoEsito() {
     if (stato.inCorso) {
-      return { html: `<div class="stato-vuoto imp-attesa" role="status">${icona('refresh-cw', 32)}<h2>Importo i dati…</h2></div>`, piede: '' };
+      return { html: `<div class="stato-vuoto flusso-attesa" role="status">${icona('refresh-cw', 32)}<h2>Importo i dati…</h2></div>`, piede: '' };
     }
     const r = stato.risultato;
     const righe = [`${plurale(r.movimenti.length, 'movimento importato', 'movimenti importati')}`];
@@ -294,7 +294,7 @@ export function apriImportazione() {
     if (r.scartati.length) righe.push(`${plurale(r.scartati.length, 'movimento non importato', 'movimenti non importati')}`);
     return {
       html: `
-        <div class="imp-esito" role="status">
+        <div class="flusso-esito" role="status">
           <span class="cerchio col-verde" style="--dim:64px">${icona('check', 32)}</span>
           <h2>Importazione completata</h2>
           <ul>${righe.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
