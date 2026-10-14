@@ -20,6 +20,14 @@ function tornaIndietroNellaCronologia() {
   return attesaIndietro;
 }
 
+// Chiamato quando "indietro" non riguarda né un pannello né una chiusura fatta da noi:
+// è l'app (app.js) a decidere cosa fare (tornare a Mese, avvisare, uscire).
+let gestoreIndietroApp = null;
+export function impostaGestoreIndietro(funzione) {
+  gestoreIndietroApp = funzione;
+}
+
+// Un solo ascoltatore di popstate per tutto: così pannelli e app non si contendono lo stesso evento.
 window.addEventListener('popstate', () => {
   if (risolviIndietro) {
     const ok = risolviIndietro;
@@ -29,7 +37,11 @@ window.addEventListener('popstate', () => {
     return;
   }
   const inCima = pila[pila.length - 1];
-  if (inCima) rimuovi(inCima, undefined, true);
+  if (inCima) {
+    rimuovi(inCima, undefined, true);
+    return;
+  }
+  gestoreIndietroApp?.();
 });
 
 function rimuovi(p, valore, daPopstate) {

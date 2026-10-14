@@ -8,6 +8,7 @@ import { oggiIso } from './util/date.js';
 import { icona } from './util/icone.js';
 import { esc } from './util/dom.js';
 import { apriInserimento } from './components/inserimento.js';
+import { impostaGestoreIndietro } from './components/pannello.js';
 import { mostraToast } from './components/toast.js';
 import * as mese from './views/mese.js';
 import * as altro from './views/altro.js';
@@ -78,9 +79,44 @@ function naviga(id) {
     if (b.dataset.rotta === rotta.id) b.setAttribute('aria-current', 'page');
     else b.removeAttribute('aria-current');
   });
-  // replaceState: cambiare area non riempie la cronologia, "indietro" esce dall'app come ci si aspetta.
-  history.replaceState(history.state, '', `#/${rotta.id}`);
+  // replaceState: cambiare area non riempie la cronologia (il tasto indietro è gestito da gestisciIndietro).
+  history.replaceState({ spese2: 'app' }, '', `#/${rotta.id}`);
   window.scrollTo(0, 0);
+}
+
+// ---- Tasto indietro ----
+// Nella cronologia teniamo due voci: una "guardia" sotto e quella dell'app sopra. Premendo indietro
+// si arriva sulla guardia, dove decidiamo noi: da un'area diversa da Mese si torna a Mese; da Mese
+// la prima volta si avvisa, la seconda (entro pochi secondi) si esce davvero.
+
+const FINESTRA_USCITA_MS = 2500;
+let uscitaPronta = false;
+let timerUscita = null;
+
+function preparaCronologia() {
+  if (history.state?.spese2 === 'app') return; // ricarica della pagina: la guardia c'è già sotto
+  history.replaceState({ spese2: 'guardia' }, '', '#/mese');
+  history.pushState({ spese2: 'app' }, '');
+}
+
+function gestisciIndietro() {
+  if (history.state?.spese2 !== 'guardia') return; // non è il nostro "indietro" (es. cambio di indirizzo a mano)
+
+  if (uscitaPronta) {
+    clearTimeout(timerUscita);
+    uscitaPronta = false;
+    history.back(); // secondo "indietro" ravvicinato: si esce dall'app
+    return;
+  }
+
+  history.pushState({ spese2: 'app' }, '', `#/${rottaCorrente?.id ?? 'mese'}`); // risale sopra la guardia
+  if (rottaCorrente?.id !== 'mese') {
+    naviga('mese');
+    return;
+  }
+  mostraToast('Premi ancora il tasto indietro per uscire dall\'app', { durata: FINESTRA_USCITA_MS });
+  uscitaPronta = true;
+  timerUscita = setTimeout(() => { uscitaPronta = false; }, FINESTRA_USCITA_MS);
 }
 
 function mostraErrore(errore) {
@@ -141,7 +177,10 @@ async function avvia() {
   applicaTema(impostazioni().tema);
   seguiTemaDiSistema();
   costruisciNavigazione();
-  naviga(rottaDaHash().id);
+  const rottaIniziale = rottaDaHash().id; // da leggere prima che preparaCronologia tocchi l'indirizzo
+  preparaCronologia();
+  impostaGestoreIndietro(gestisciIndietro);
+  naviga(rottaIniziale);
 
   window.addEventListener('hashchange', () => naviga(rottaDaHash().id));
   document.addEventListener('spese2:movimenti', (e) => istanza?.aggiorna?.({ evento: 'movimenti', ...e.detail }));
