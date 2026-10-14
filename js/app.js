@@ -11,6 +11,7 @@ import { apriInserimento } from './components/inserimento.js';
 import { impostaGestoreIndietro } from './components/pannello.js';
 import { mostraToast } from './components/toast.js';
 import { VERSIONE_APP } from './versione.js';
+import { scriviDiagnostica } from './util/diagnostica.js';
 import * as mese from './views/mese.js';
 import * as altro from './views/altro.js';
 import { creaVistaSegnaposto } from './views/segnaposto.js';
@@ -96,9 +97,10 @@ let uscitaPronta = false;
 let timerUscita = null;
 
 function preparaCronologia() {
-  if (history.state?.spese2 === 'app') return; // ricarica della pagina: la guardia c'è già sotto
+  if (history.state?.spese2 === 'app') { scriviDiagnostica('guardia già presente (ricarica)'); return; }
   history.replaceState({ spese2: 'guardia' }, '', '#/mese');
   history.pushState({ spese2: 'app' }, '', `#/${rottaCorrente?.id ?? 'mese'}`);
+  scriviDiagnostica(`guardia creata, voci=${history.length}, attivazione=${navigator.userActivation?.hasBeenActive}`);
 }
 
 // Chrome (Android) salta col tasto indietro le voci aggiunte da una pagina SENZA un'azione dell'utente
@@ -118,6 +120,7 @@ function alPrimoTocco(funzione) {
 }
 
 function gestisciIndietro() {
+  scriviDiagnostica(`indietro: stato=${history.state?.spese2 ?? 'nessuno'} area=${rottaCorrente?.id}`);
   if (history.state?.spese2 !== 'guardia') return; // non è il nostro "indietro" (es. cambio di indirizzo a mano)
 
   if (uscitaPronta) {
@@ -212,6 +215,7 @@ async function avvia() {
   costruisciNavigazione();
   impostaGestoreIndietro(gestisciIndietro);
   naviga(rottaDaHash().id);
+  scriviDiagnostica(`avvio v${VERSIONE_APP}, stato=${history.state?.spese2 ?? 'nessuno'}, voci=${history.length}, standalone=${matchMedia('(display-mode: standalone)').matches}`);
   alPrimoTocco(preparaCronologia);
   avvisaSeAggiornata();
 
