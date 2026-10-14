@@ -102,10 +102,15 @@ function preparaCronologia() {
 }
 
 // Chrome (Android) salta col tasto indietro le voci aggiunte da una pagina SENZA un'azione dell'utente
-// ("history manipulation intervention"): la guardia va quindi creata solo dopo il primo tocco o tasto.
+// ("history manipulation intervention"): la guardia va quindi creata solo dopo un'attivazione vera.
+// pointerup e touchend possono arrivare PRIMA che Chrome registri l'attivazione, mentre click e keydown
+// no: si controlla navigator.userActivation e, se non è ancora attiva, si aspetta l'evento successivo.
 function alPrimoTocco(funzione) {
-  const eventi = ['pointerup', 'touchend', 'keydown'];
+  const eventi = ['click', 'keydown', 'pointerup', 'touchend'];
   const scatta = () => {
+    const attivazione = navigator.userActivation;
+    const attiva = attivazione ? attivazione.hasBeenActive : true; // senza API: ci si fida di click/keydown
+    if (!attiva) return;
     eventi.forEach((tipo) => window.removeEventListener(tipo, scatta, true));
     funzione();
   };
