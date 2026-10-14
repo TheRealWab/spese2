@@ -6,7 +6,7 @@
 
 // Va tenuta uguale a VERSIONE_APP in js/versione.js (lo verifica un test).
 // Cambiarla a ogni rilascio: cambia il nome della cache e i file vengono riscaricati.
-const VERSIONE = '1.2.0';
+const VERSIONE = '1.3.0';
 const PREFISSO_CACHE = 'spese2-';
 const CACHE = `${PREFISSO_CACHE}${VERSIONE}`;
 
@@ -22,6 +22,7 @@ const FILE = [
   'css/flusso.css',
   'css/importa.css',
   'css/viste.css',
+  'css/blocco.css',
   'js/app.js',
   'js/db.js',
   'js/versione.js',
@@ -32,6 +33,7 @@ const FILE = [
   'js/util/formato.js',
   'js/util/icone.js',
   'js/util/id.js',
+  'js/model/azzera.js',
   'js/model/backup.js',
   'js/model/backup-db.js',
   'js/model/calcoli.js',
@@ -40,21 +42,27 @@ const FILE = [
   'js/model/conti.js',
   'js/model/importa-vecchia.js',
   'js/model/importazione.js',
+  'js/model/blocco.js',
   'js/model/impostazioni.js',
+  'js/model/impronta.js',
   'js/model/movimenti.js',
   'js/model/palette.js',
   'js/model/seed.js',
+  'js/model/sicurezza.js',
   'js/views/altro.js',
   'js/views/mese.js',
   'js/views/segnaposto.js',
   'js/components/importa-guidata.js',
   'js/components/backup-esporta.js',
+  'js/components/blocco.js',
   'js/components/backup-ripristina.js',
   'js/components/inserimento.js',
   'js/components/pannello.js',
   'js/components/riga-movimento.js',
   'js/components/selettori.js',
+  'js/components/sicurezza-ui.js',
   'js/components/tastierino.js',
+  'js/components/tastierino-pin.js',
   'js/components/toast.js',
   'vendor/lucide/icone.js',
   'icons/icon.svg',

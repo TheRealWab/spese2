@@ -7,6 +7,8 @@ import { impostazioni, salvaImpostazioni } from '../model/impostazioni.js';
 import { contiAttivi, contoPerId } from '../model/catalogo.js';
 import { scegliConto, scegliNumero, scegliAbbinamento } from '../components/selettori.js';
 import { apriImportazione } from '../components/importa-guidata.js';
+import { apriSicurezza } from '../components/sicurezza-ui.js';
+import { sicurezza } from '../model/blocco.js';
 import { apriEsportaBackup } from '../components/backup-esporta.js';
 import { apriRipristinaBackup } from '../components/backup-ripristina.js';
 import { statoUltimoBackup, descriviUltimoBackup } from '../model/backup.js';
@@ -18,7 +20,6 @@ const ORDINI = [['frequenza', 'Più usate'], ['manuale', 'Manuale']];
 
 const VOCI_FUTURE = [
   ['repeat', 'Movimenti ricorrenti', 'Stipendio, PAC, abbonamenti'],
-  ['shield-check', 'Sicurezza', 'Sblocco con impronta e PIN'],
 ];
 
 const segmentato = (opzioni, attivo, nome) => `
@@ -32,6 +33,7 @@ export function monta(radice) {
     const conto = contoPerId(imp.contoPredefinito);
     const giorno = imp.giornoInizioMese;
     const backup = statoUltimoBackup(imp.ultimoBackup, oggiIso());
+    const blocco = sicurezza();
 
     radice.innerHTML = `
       <h1 class="vista-titolo">Altro</h1>
@@ -79,6 +81,10 @@ export function monta(radice) {
             <span class="cerchio cerchio-neutro">${icona('download', 20)}</span>
             <span class="riga-testo"><span class="riga-titolo">Backup</span><span class="riga-sotto">${descriviUltimoBackup(backup)}</span></span>
             ${backup.daFare ? '<span class="badge badge-avviso">Da fare</span>' : ''}${icona('chevron-right', 18)}
+          </button>
+          <button type="button" class="riga-lista" data-az="sicurezza">
+            <span class="cerchio cerchio-neutro">${icona('shield-check', 20)}</span>
+            <span class="riga-testo"><span class="riga-titolo">Sicurezza</span><span class="riga-sotto">${blocco.attiva ? (blocco.impronta ? 'Blocco attivo con PIN e impronta' : 'Blocco attivo con PIN') : 'Sblocco con impronta e PIN'}</span></span>${icona('chevron-right', 18)}
           </button>
           ${VOCI_FUTURE.map(([nomeIcona, titolo, sotto]) => `
             <button type="button" class="riga-lista" disabled aria-disabled="true">
@@ -152,6 +158,8 @@ export function monta(radice) {
       }
     } else if (az === 'importa') {
       apriImportazione();
+    } else if (az === 'sicurezza') {
+      apriSicurezza();
     } else if (az === 'backup') {
       const scelta = await scegliAbbinamento({
         titolo: 'Backup',

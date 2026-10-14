@@ -1,0 +1,61 @@
+/* Blocco dell'app (schermata, tastierino PIN) e schermata Sicurezza. */
+
+/* Finché l'app è bloccata (o in background) il contenuto non è visibile: nemmeno nelle miniature delle app recenti. */
+html[data-bloccato] #app, html[data-bloccato] #strato-pannelli, html[data-bloccato] #strato-toast,
+html[data-copri] #app, html[data-copri] #strato-pannelli, html[data-copri] #strato-toast { visibility: hidden; }
+
+.blocco {
+  position: fixed;
+  inset: 0;
+  z-index: 100; /* sopra pannelli (50) e messaggi (70) */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  max-width: var(--larghezza-max);
+  margin: 0 auto;
+  padding: calc(var(--sp-8) + var(--safe-sopra)) var(--sp-4) calc(var(--sp-4) + var(--safe-sotto));
+  background: var(--sfondo);
+  overflow-y: auto;
+}
+.blocco [hidden] { display: none !important; }
+
+.blocco-testa { display: grid; justify-items: center; gap: var(--sp-2); text-align: center; }
+.blocco-testa h1 { font-size: var(--t-xl); }
+.blocco-stato { min-height: 1.4em; color: var(--testo-2); font-weight: 600; }
+
+.blocco-pin { width: 100%; }
+.blocco-azioni { display: grid; justify-items: center; gap: var(--sp-1); width: 100%; }
+.blocco-azioni .pulsante { width: 100%; }
+.blocco-link { min-height: var(--tocco); padding: 0 var(--sp-4); color: var(--accento-forte); font-weight: 600; }
+
+.blocco-conferma { display: grid; margin-block: auto; gap: var(--sp-3); width: 100%; text-align: center; }
+.blocco-conferma h2 { font-size: var(--t-l); }
+.blocco-conferma p { color: var(--testo-2); }
+.blocco-conferma .dialogo-azioni { padding: var(--sp-2) 0 0; }
+
+/* Tastierino del PIN */
+.pin { display: grid; justify-items: center; gap: var(--sp-5); width: 100%; }
+.pin-punti { display: flex; gap: var(--sp-3); min-height: 14px; }
+.pin-punto {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--testo-3);
+  border-radius: 50%;
+  transition: background var(--dur-1), border-color var(--dur-1), transform var(--dur-1);
+}
+.pin-punto.pieno { border-color: var(--accento); background: var(--accento); transform: scale(1.1); }
+.pin-tasti { width: 100%; }
+.pin-tasti span { min-height: 1px; }
+.pin-spento .pin-tasti { opacity: 0.45; pointer-events: none; }
+.pin .tasto:disabled { opacity: 0.35; }
+
+/* Schermata Sicurezza */
+.sic-pin-testa { display: grid; gap: var(--sp-2); padding-top: var(--sp-6); text-align: center; }
+.sic-pin-testa h3 { font-size: var(--t-l); }
+.sic-pin-testa p { color: var(--testo-2); }
+.sic-azioni { display: grid; gap: var(--sp-2); }
+
+/* La pagina sotto non deve scorrere (né mostrare la sua barra) mentre c'è il blocco */
+html[data-bloccato], html[data-copri] { overflow: hidden; }

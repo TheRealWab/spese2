@@ -10,6 +10,7 @@ import { esc } from './util/dom.js';
 import { apriInserimento } from './components/inserimento.js';
 import { impostaGestoreIndietro } from './components/pannello.js';
 import { mostraToast } from './components/toast.js';
+import { inizializzaBlocco, controllaBlocco } from './components/blocco.js';
 import { VERSIONE_APP } from './versione.js';
 import * as mese from './views/mese.js';
 import * as altro from './views/altro.js';
@@ -224,6 +225,8 @@ async function avvia() {
   applicaTema(impostazioni().tema);
   seguiTemaDiSistema();
   costruisciNavigazione();
+  inizializzaBlocco();
+  controllaBlocco(); // con il blocco attivo, copre subito tutto: i dati non restano visibili
   impostaGestoreIndietro(suCronologia);
   const rottaIniziale = rottaDaHash();
   mostra(rottaIniziale);

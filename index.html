@@ -18,6 +18,12 @@
       var t = localStorage.getItem('spese2_tema');
       if (t === 'chiaro' || t === 'scuro') document.documentElement.dataset.tema = t;
     } catch (e) { /* storage non disponibile: vale il tema di sistema */ }
+    // Con il blocco attivo, all'apertura i dati restano nascosti fin dal primo istante (js/model/blocco.js).
+    try {
+      if (localStorage.getItem('spese2_blocco') === '1' && sessionStorage.getItem('spese2_sbloccato') !== '1') {
+        document.documentElement.dataset.bloccato = '1';
+      }
+    } catch (e) { /* storage non disponibile */ }
   </script>
 
   <link rel="stylesheet" href="css/tokens.css">
@@ -27,6 +33,7 @@
   <link rel="stylesheet" href="css/flusso.css">
   <link rel="stylesheet" href="css/importa.css">
   <link rel="stylesheet" href="css/viste.css">
+  <link rel="stylesheet" href="css/blocco.css">
   <script type="module" src="js/app.js"></script>
 </head>
 <body>
