@@ -65,12 +65,37 @@ function costruisciNavigazione() {
   document.getElementById('fab').addEventListener('click', () => apriInserimento());
 }
 
+/** Cambio d'area chiesto dall'utente (tocco sulla barra): aggiorna la cronologia e la schermata. */
 function naviga(id) {
   const rotta = ROTTE.find((r) => r.id === id) ?? ROTTE[0];
   if (rotta === rottaCorrente) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     return;
   }
+  aggiornaCronologia(rotta);
+  mostra(rotta);
+}
+
+/**
+ * Cronologia: base (Mese) → app (Mese) → area (un'altra area). Mese è sempre la voce sotto le altre aree,
+ * così "indietro" da un'area ci torna da solo. Qui si fanno push SOLO dentro un tocco (vedi preparaCronologia).
+ */
+function aggiornaCronologia(rotta) {
+  const tipo = history.state?.spese2;
+  const url = `#/${rotta.id}`;
+  if (rotta.id === 'mese') {
+    if (tipo === 'area') history.back(); // torna alla voce Mese che sta sotto
+    else history.replaceState(history.state, '', url);
+  } else if (tipo === 'app') {
+    history.pushState({ spese2: 'area' }, '', url);
+  } else {
+    history.replaceState(history.state, '', url);
+  }
+}
+
+/** Disegna un'area senza toccare la cronologia. */
+function mostra(rotta) {
+  if (rotta === rottaCorrente) return;
   const contenitore = document.createElement('div');
   contenitore.className = 'vista-entra';
   vista.replaceChildren(contenitore);
@@ -81,63 +106,46 @@ function naviga(id) {
     if (b.dataset.rotta === rotta.id) b.setAttribute('aria-current', 'page');
     else b.removeAttribute('aria-current');
   });
-  // replaceState: cambiare area non riempie la cronologia (il tasto indietro è gestito da gestisciIndietro).
-  // Lo stato della voce si conserva: serve a preparaCronologia per sapere se la guardia esiste già.
-  history.replaceState(history.state, '', `#/${rotta.id}`);
   window.scrollTo(0, 0);
 }
 
 // ---- Tasto indietro ----
-// Nella cronologia teniamo due voci: una "guardia" sotto e quella dell'app sopra. Premendo indietro
-// si arriva sulla guardia, dove decidiamo noi: da un'area diversa da Mese si torna a Mese; da Mese
-// la prima volta si avvisa, la seconda (entro pochi secondi) si esce davvero.
+// La cronologia ha tre livelli: base (Mese) → app (Mese) → area (un'altra area). Mese sta sempre sotto
+// le altre aree, quindi "indietro" da un'area ci torna da solo. Da Mese si arriva sulla voce di base:
+// qui compare l'avviso e la pagina RESTA lì, così un secondo "indietro" esce dall'app in modo nativo.
+//
+// REGOLA D'ORO: push solo dentro un tocco. Chrome (Android) salta col tasto indietro le voci su cui la
+// pagina fa pushState senza azione dell'utente ("history manipulation intervention"): un push dentro
+// l'evento popstate faceva saltare la voce di base e il secondo "indietro" usciva senza avviso.
 
-const FINESTRA_USCITA_MS = 2500;
-let uscitaPronta = false;
-let timerUscita = null;
+const MESSAGGIO_USCITA = 'Premi ancora il tasto indietro per uscire dall\'app';
 
+/** A ogni tocco: se la cronologia non è pronta (primo tocco) o siamo rimasti sulla base (dopo l'avviso), la ripristina. */
 function preparaCronologia() {
-  if (history.state?.spese2 === 'app') { scriviDiagnostica('guardia già presente (ricarica)'); return; }
-  history.replaceState({ spese2: 'guardia' }, '', '#/mese');
-  history.pushState({ spese2: 'app' }, '', `#/${rottaCorrente?.id ?? 'mese'}`);
-  scriviDiagnostica(`guardia creata, voci=${history.length}, attivazione=${navigator.userActivation?.hasBeenActive}`);
-}
-
-// Chrome (Android) salta col tasto indietro le voci aggiunte da una pagina SENZA un'azione dell'utente
-// ("history manipulation intervention"): la guardia va quindi creata solo dopo un'attivazione vera.
-// pointerup e touchend possono arrivare PRIMA che Chrome registri l'attivazione, mentre click e keydown
-// no: si controlla navigator.userActivation e, se non è ancora attiva, si aspetta l'evento successivo.
-function alPrimoTocco(funzione) {
-  const eventi = ['click', 'keydown', 'pointerup', 'touchend'];
-  const scatta = () => {
-    const attivazione = navigator.userActivation;
-    const attiva = attivazione ? attivazione.hasBeenActive : true; // senza API: ci si fida di click/keydown
-    if (!attiva) return;
-    eventi.forEach((tipo) => window.removeEventListener(tipo, scatta, true));
-    funzione();
-  };
-  eventi.forEach((tipo) => window.addEventListener(tipo, scatta, true));
-}
-
-function gestisciIndietro() {
-  scriviDiagnostica(`indietro: stato=${history.state?.spese2 ?? 'nessuno'} area=${rottaCorrente?.id}`);
-  if (history.state?.spese2 !== 'guardia') return; // non è il nostro "indietro" (es. cambio di indirizzo a mano)
-
-  if (uscitaPronta) {
-    clearTimeout(timerUscita);
-    uscitaPronta = false;
-    history.back(); // secondo "indietro" ravvicinato: si esce dall'app
+  const tipo = history.state?.spese2;
+  if (tipo === 'base') {
+    history.pushState({ spese2: 'app' }, '', '#/mese'); // l'utente è rimasto: si risale sopra la base
+    scriviDiagnostica(`risalita sopra la base, voci=${history.length}`);
     return;
   }
+  if (tipo) return; // app o area: tutto a posto (anche dopo una ricarica della pagina)
+  const area = rottaCorrente?.id ?? 'mese';
+  history.replaceState({ spese2: 'base' }, '', '#/mese');
+  history.pushState({ spese2: 'app' }, '', '#/mese');
+  if (area !== 'mese') history.pushState({ spese2: 'area' }, '', `#/${area}`);
+  scriviDiagnostica(`cronologia creata, voci=${history.length}, attivazione=${navigator.userActivation?.hasBeenActive}`);
+}
 
-  history.pushState({ spese2: 'app' }, '', `#/${rottaCorrente?.id ?? 'mese'}`); // risale sopra la guardia
-  if (rottaCorrente?.id !== 'mese') {
-    naviga('mese');
+/** Chiamata dal gestore unico di popstate quando "indietro" non riguarda un pannello. */
+function suCronologia() {
+  const tipo = history.state?.spese2;
+  scriviDiagnostica(`indietro: stato=${tipo ?? 'nessuno'} hash=${location.hash}`);
+  if (tipo === 'base') {
+    mostra(ROTTE[0]);
+    mostraToast(MESSAGGIO_USCITA, { durata: 5000 }); // niente push qui: resta sulla base
     return;
   }
-  mostraToast('Premi ancora il tasto indietro per uscire dall\'app', { durata: FINESTRA_USCITA_MS });
-  uscitaPronta = true;
-  timerUscita = setTimeout(() => { uscitaPronta = false; }, FINESTRA_USCITA_MS);
+  mostra(rottaDaHash()); // app o area: la schermata segue la voce raggiunta
 }
 
 function mostraErrore(errore) {
@@ -213,13 +221,16 @@ async function avvia() {
   applicaTema(impostazioni().tema);
   seguiTemaDiSistema();
   costruisciNavigazione();
-  impostaGestoreIndietro(gestisciIndietro);
-  naviga(rottaDaHash().id);
+  impostaGestoreIndietro(suCronologia);
+  const rottaIniziale = rottaDaHash();
+  mostra(rottaIniziale);
+  history.replaceState(history.state, '', `#/${rottaIniziale.id}`);
   scriviDiagnostica(`avvio v${VERSIONE_APP}, stato=${history.state?.spese2 ?? 'nessuno'}, voci=${history.length}, standalone=${matchMedia('(display-mode: standalone)').matches}`);
-  alPrimoTocco(preparaCronologia);
+  // click e tasti (non Esc) sono azioni "vere" per Chrome: solo lì si può modificare la cronologia.
+  window.addEventListener('click', preparaCronologia, true);
+  window.addEventListener('keydown', (e) => { if (e.key !== 'Escape') preparaCronologia(); }, true);
   avvisaSeAggiornata();
 
-  window.addEventListener('hashchange', () => naviga(rottaDaHash().id));
   document.addEventListener('spese2:movimenti', (e) => istanza?.aggiorna?.({ evento: 'movimenti', ...e.detail }));
   document.addEventListener('spese2:impostazioni', (e) => istanza?.aggiorna?.({ evento: 'impostazioni', ...e.detail }));
   // Tornando all'app dopo ore (o a mezzanotte passata) "Oggi" e i totali vanno riletti.
