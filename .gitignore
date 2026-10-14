@@ -43,3 +43,7 @@ desktop.ini
 # Strumenti
 node_modules/
 *.log
+
+# Documentazione personale: resta solo sul mio computer, non va su GitHub
+README.md
+SPEC.md
