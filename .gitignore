@@ -1,0 +1,45 @@
+# ============================================================
+# PRIVACY: nessun dato personale deve finire su GitHub.
+# Questo file va nel PRIMO commit, prima di qualsiasi altro file.
+# ============================================================
+
+# Cartella per file reali (export vecchia app, backup, screenshot con dati)
+_privato/
+_privato/**
+
+# Backup ed export dei dati (nome file previsto dall'app: spese-backup-AAAA-MM-GG.json)
+spese-backup-*.json
+spese-backup-*
+*backup*.json
+*.backup
+*.bak
+backup/
+backups/
+export/
+exports/
+*export*.json
+*export*.csv
+
+# Tabelle e dump che potrebbero contenere dati reali
+*.csv
+*.xlsx
+*.xls
+*.sqlite
+*.db
+
+# Segreti e configurazioni locali
+.env
+.env.*
+.claude/
+.playwright-mcp/
+
+# Sistema operativo / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Strumenti
+node_modules/
+*.log
