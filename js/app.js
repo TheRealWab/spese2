@@ -80,7 +80,8 @@ function naviga(id) {
     else b.removeAttribute('aria-current');
   });
   // replaceState: cambiare area non riempie la cronologia (il tasto indietro è gestito da gestisciIndietro).
-  history.replaceState({ spese2: 'app' }, '', `#/${rotta.id}`);
+  // Lo stato della voce si conserva: serve a preparaCronologia per sapere se la guardia esiste già.
+  history.replaceState(history.state, '', `#/${rotta.id}`);
   window.scrollTo(0, 0);
 }
 
@@ -96,7 +97,18 @@ let timerUscita = null;
 function preparaCronologia() {
   if (history.state?.spese2 === 'app') return; // ricarica della pagina: la guardia c'è già sotto
   history.replaceState({ spese2: 'guardia' }, '', '#/mese');
-  history.pushState({ spese2: 'app' }, '');
+  history.pushState({ spese2: 'app' }, '', `#/${rottaCorrente?.id ?? 'mese'}`);
+}
+
+// Chrome (Android) salta col tasto indietro le voci aggiunte da una pagina SENZA un'azione dell'utente
+// ("history manipulation intervention"): la guardia va quindi creata solo dopo il primo tocco o tasto.
+function alPrimoTocco(funzione) {
+  const eventi = ['pointerup', 'touchend', 'keydown'];
+  const scatta = () => {
+    eventi.forEach((tipo) => window.removeEventListener(tipo, scatta, true));
+    funzione();
+  };
+  eventi.forEach((tipo) => window.addEventListener(tipo, scatta, true));
 }
 
 function gestisciIndietro() {
@@ -177,10 +189,9 @@ async function avvia() {
   applicaTema(impostazioni().tema);
   seguiTemaDiSistema();
   costruisciNavigazione();
-  const rottaIniziale = rottaDaHash().id; // da leggere prima che preparaCronologia tocchi l'indirizzo
-  preparaCronologia();
   impostaGestoreIndietro(gestisciIndietro);
-  naviga(rottaIniziale);
+  naviga(rottaDaHash().id);
+  alPrimoTocco(preparaCronologia);
 
   window.addEventListener('hashchange', () => naviga(rottaDaHash().id));
   document.addEventListener('spese2:movimenti', (e) => istanza?.aggiorna?.({ evento: 'movimenti', ...e.detail }));
