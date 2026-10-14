@@ -7,7 +7,6 @@ import { impostazioni, salvaImpostazioni } from '../model/impostazioni.js';
 import { contiAttivi, contoPerId } from '../model/catalogo.js';
 import { scegliConto, scegliNumero } from '../components/selettori.js';
 import { VERSIONE_APP, FASE_APP } from '../versione.js';
-import { leggiDiagnostica } from '../util/diagnostica.js';
 
 const TEMI = [['auto', 'Automatico'], ['chiaro', 'Chiaro'], ['scuro', 'Scuro']];
 const ORDINI = [['frequenza', 'Più usate'], ['manuale', 'Manuale']];
@@ -92,13 +91,6 @@ export function monta(radice) {
             <span class="riga-testo">
               <span class="riga-titolo">Uso offline</span>
               <span class="riga-sotto" data-r="offline">Verifica in corso…</span>
-            </span>
-          </div>
-          <div class="riga-lista">
-            <span class="cerchio cerchio-neutro">${icona('info', 20)}</span>
-            <span class="riga-testo">
-              <span class="riga-titolo">Diagnostica tasto indietro (temporanea)</span>
-              <span class="riga-sotto" style="white-space:pre-line">${esc(leggiDiagnostica().join('\n') || 'Nessun evento')}</span>
             </span>
           </div>
         </div>

@@ -11,7 +11,6 @@ import { apriInserimento } from './components/inserimento.js';
 import { impostaGestoreIndietro } from './components/pannello.js';
 import { mostraToast } from './components/toast.js';
 import { VERSIONE_APP } from './versione.js';
-import { scriviDiagnostica } from './util/diagnostica.js';
 import * as mese from './views/mese.js';
 import * as altro from './views/altro.js';
 import { creaVistaSegnaposto } from './views/segnaposto.js';
@@ -125,7 +124,6 @@ function preparaCronologia() {
   const tipo = history.state?.spese2;
   if (tipo === 'base') {
     history.pushState({ spese2: 'app' }, '', '#/mese'); // l'utente è rimasto: si risale sopra la base
-    scriviDiagnostica(`risalita sopra la base, voci=${history.length}`);
     return;
   }
   if (tipo) return; // app o area: tutto a posto (anche dopo una ricarica della pagina)
@@ -133,13 +131,11 @@ function preparaCronologia() {
   history.replaceState({ spese2: 'base' }, '', '#/mese');
   history.pushState({ spese2: 'app' }, '', '#/mese');
   if (area !== 'mese') history.pushState({ spese2: 'area' }, '', `#/${area}`);
-  scriviDiagnostica(`cronologia creata, voci=${history.length}, attivazione=${navigator.userActivation?.hasBeenActive}`);
 }
 
 /** Chiamata dal gestore unico di popstate quando "indietro" non riguarda un pannello. */
 function suCronologia() {
   const tipo = history.state?.spese2;
-  scriviDiagnostica(`indietro: stato=${tipo ?? 'nessuno'} hash=${location.hash}`);
   if (tipo === 'base') {
     mostra(ROTTE[0]);
     mostraToast(MESSAGGIO_USCITA, { durata: 5000 }); // niente push qui: resta sulla base
@@ -225,7 +221,6 @@ async function avvia() {
   const rottaIniziale = rottaDaHash();
   mostra(rottaIniziale);
   history.replaceState(history.state, '', `#/${rottaIniziale.id}`);
-  scriviDiagnostica(`avvio v${VERSIONE_APP}, stato=${history.state?.spese2 ?? 'nessuno'}, voci=${history.length}, standalone=${matchMedia('(display-mode: standalone)').matches}`);
   // click e tasti (non Esc) sono azioni "vere" per Chrome: solo lì si può modificare la cronologia.
   window.addEventListener('click', preparaCronologia, true);
   window.addEventListener('keydown', (e) => { if (e.key !== 'Escape') preparaCronologia(); }, true);
