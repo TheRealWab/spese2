@@ -6,7 +6,7 @@
 
 // Va tenuta uguale a VERSIONE_APP in js/versione.js (lo verifica un test).
 // Cambiarla a ogni rilascio: cambia il nome della cache e i file vengono riscaricati.
-const VERSIONE = '1.7.1';
+const VERSIONE = '1.8.0';
 const PREFISSO_CACHE = 'spese2-';
 const CACHE = `${PREFISSO_CACHE}${VERSIONE}`;
 
@@ -25,6 +25,7 @@ const FILE = [
   'css/blocco.css',
   'css/categorie.css',
   'css/patrimonio.css',
+  'css/grafici.css',
   'js/app.js',
   'js/db.js',
   'js/versione.js',
@@ -50,6 +51,7 @@ const FILE = [
   'js/model/blocco.js',
   'js/model/conti-db.js',
   'js/model/file-backup.js',
+  'js/model/grafici.js',
   'js/model/impostazioni.js',
   'js/model/impronta.js',
   'js/model/movimenti.js',
@@ -64,9 +66,9 @@ const FILE = [
   'js/model/sicurezza.js',
   'js/views/altro.js',
   'js/views/categorie.js',
+  'js/views/grafici.js',
   'js/views/mese.js',
   'js/views/patrimonio.js',
-  'js/views/segnaposto.js',
   'js/components/aggiornamento.js',
   'js/components/gestione-note.js',
   'js/components/importa-guidata.js',
@@ -74,6 +76,7 @@ const FILE = [
   'js/components/backup-esporta.js',
   'js/components/blocco.js',
   'js/components/backup-ripristina.js',
+  'js/components/ciambella.js',
   'js/components/dettaglio-categoria.js',
   'js/components/dettaglio-conto.js',
   'js/components/editor-categoria.js',
@@ -81,6 +84,7 @@ const FILE = [
   'js/components/gestione-categorie.js',
   'js/components/gestione-conti.js',
   'js/components/grafico-andamento.js',
+  'js/components/grafico-barre.js',
   'js/components/inserimento.js',
   'js/components/pannello.js',
   'js/components/riga-movimento.js',

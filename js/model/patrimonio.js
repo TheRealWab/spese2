@@ -136,9 +136,14 @@ export function dateCampione(da, a, massimoPunti = 90) {
   return date;
 }
 
-/** Andamento del patrimonio: [{ data, valore }] per le date campione tra `da` e `a`. */
-export function serieAndamento(storie, da, a, massimoPunti = 90) {
-  return dateCampione(da, a, massimoPunti).map((data) => ({ data, valore: patrimonioAl(storie, data) }));
+/**
+ * Andamento del patrimonio: [{ data, valore }] per le date campione tra `da` e `a`. Le `dateExtra` (per esempio i
+ * giorni in cui si è aggiornato il valore di un investimento) si aggiungono se cadono nell'intervallo.
+ */
+export function serieAndamento(storie, da, a, massimoPunti = 90, dateExtra = []) {
+  const date = new Set(dateCampione(da, a, massimoPunti));
+  for (const d of dateExtra) if (d >= da && d <= a) date.add(d);
+  return [...date].sort().map((data) => ({ data, valore: patrimonioAl(storie, data) }));
 }
 
 /**

@@ -17,15 +17,8 @@ import * as mese from './views/mese.js';
 import * as altro from './views/altro.js';
 import * as categorie from './views/categorie.js';
 import * as patrimonio from './views/patrimonio.js';
-import { creaVistaSegnaposto } from './views/segnaposto.js';
+import * as grafici from './views/grafici.js';
 
-const grafici = creaVistaSegnaposto({
-  titolo: 'Grafici',
-  icona: 'chart-pie',
-  colore: 'indaco',
-  domanda: 'Dove sono finiti i soldi?',
-  punti: ['Ciambella per categoria, con importi e percentuali', 'Confronto con il periodo precedente', 'Entrate, spese e risparmio nel tempo'],
-});
 
 const ROTTE = [
   { id: 'mese', etichetta: 'Mese', icona: 'calendar-days', vista: mese },

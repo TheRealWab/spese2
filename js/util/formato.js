@@ -147,3 +147,25 @@ export function etichettaCiclo(ciclo, giornoInizio) {
   const fine = fmtGiornoMeseBreve.format(comeData(ciclo.fine));
   return a1 === a2 ? `${inizio} – ${fine}` : `${inizio} ${a1} – ${fine} ${a2}`;
 }
+
+// ---- Intervalli e mesi (periodi dei Grafici) ----
+
+const fmtMeseBreveAnno = new Intl.DateTimeFormat('it-IT', { month: 'short', year: 'numeric', ...opzioniUtc });
+const fmtMeseBreve = new Intl.DateTimeFormat('it-IT', { month: 'short', ...opzioniUtc });
+const fmtMeseLungo = new Intl.DateTimeFormat('it-IT', { month: 'long', ...opzioniUtc });
+
+/** "5 ott – 11 ott 2026" (con l'anno su entrambe le date se sono di anni diversi). */
+export function etichettaIntervallo(da, a) {
+  if (da === a) return dataBreve(da);
+  if (daIso(da).a === daIso(a).a) return `${fmtGiornoMeseBreve.format(comeData(da))} – ${dataBreve(a)}`;
+  return `${dataBreve(da)} – ${dataBreve(a)}`;
+}
+
+/** "ott 2026" */
+export const meseBreveAnno = (iso) => fmtMeseBreveAnno.format(comeData(iso)).replace('.', '');
+
+/** "ott" */
+export const meseBreve = (iso) => fmtMeseBreve.format(comeData(iso)).replace('.', '');
+
+/** "ottobre" (minuscolo, per le frasi: «rispetto a settembre») */
+export const nomeMese = (iso) => fmtMeseLungo.format(comeData(iso));

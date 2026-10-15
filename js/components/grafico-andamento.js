@@ -12,12 +12,13 @@ let contatoreGrafici = 0; // l'id della sfumatura deve essere unico nella pagina
 
 /**
  * @param {HTMLElement} contenitore
- * @returns {{aggiorna(dati: {punti: {data: string, valore: number}[], nascosto?: boolean}): void}}
+ * @returns {{aggiorna(dati: {punti: {data: string, valore: number}[], nascosto?: boolean, marcatori?: string[]}): void}}
  */
 export function creaGrafico(contenitore) {
   const idSfumatura = `gr-sfumatura-${++contatoreGrafici}`;
   let punti = [];
   let nascosto = false;
+  let marcatori = [];
   let xDi = [];
   let yDi = [];
 
@@ -31,6 +32,7 @@ export function creaGrafico(contenitore) {
   function aggiorna(dati) {
     punti = dati.punti ?? [];
     nascosto = Boolean(dati.nascosto);
+    marcatori = dati.marcatori ?? [];
     disegna();
   }
 
@@ -53,6 +55,10 @@ export function creaGrafico(contenitore) {
     const linea = punti.map((_, i) => `${i ? 'L' : 'M'}${xDi[i].toFixed(2)} ${yDi[i].toFixed(2)}`).join(' ');
     const area = `${linea} L100 ${ALTEZZA} L0 ${ALTEZZA} Z`;
     const etichettaValore = (v) => (nascosto ? MASCHERA_IMPORTO : euroArrotondato(v));
+    // Punti dove si è aggiornato il valore di un investimento: piccoli cerchi sulla linea.
+    const segni = punti
+      .map((p, i) => (marcatori.includes(p.data) ? `<span class="gr-marcatore" style="left:${xDi[i]}%; top:${yDi[i]}%"></span>` : ''))
+      .join('');
     const alto = Math.max(...valori);
     const basso = Math.min(...valori);
 
@@ -68,6 +74,7 @@ export function creaGrafico(contenitore) {
           <path class="gr-riempimento" d="${area}" fill="url(#${idSfumatura})"/>
           <path class="gr-linea" d="${linea}" fill="none" vector-effect="non-scaling-stroke"/>
         </svg>
+        ${segni}
         <span class="gr-estremo gr-alto">${esc(etichettaValore(alto))}</span>
         <span class="gr-estremo gr-basso">${esc(etichettaValore(basso))}</span>
         <span class="gr-guida" hidden></span>
