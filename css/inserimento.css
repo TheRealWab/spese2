@@ -231,3 +231,9 @@
   .cat-voce { padding-block: 2px; }
   .cat-nome { min-height: 2.3em; }
 }
+
+/* Con più di 12 categorie la griglia scorre: una sfumatura in basso mostra che c'è altro (vedi segnalaAltro). */
+.ins-corpo[data-altro] {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent);
+}

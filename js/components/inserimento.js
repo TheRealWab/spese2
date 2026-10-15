@@ -111,6 +111,7 @@ export async function apriInserimento({ movimento = null, iniziale = {} } = {}) 
     const r = (nome) => $(`[data-r="${nome}"]`, el);
     const campoNota = $('#campo-nota', el);
     const sfondo = el.closest('.pannello-sfondo');
+    r('corpo').addEventListener('scroll', segnalaAltro, { passive: true });
 
     creaTastierino(r('tastierino'), (tasto) => {
       stato.cifre = applicaTasto(stato.cifre, tasto);
@@ -187,6 +188,15 @@ export async function apriInserimento({ movimento = null, iniziale = {} } = {}) 
 
     function aggiornaCorpo() {
       r('corpo').innerHTML = stato.tipo === 'trasferimento' ? htmlTrasferimento() : htmlCategorie();
+      requestAnimationFrame(segnalaAltro);
+    }
+
+    /** Con più di 12 categorie la griglia scorre: una sfumatura in basso avvisa che c'è altro da vedere. */
+    function segnalaAltro() {
+      const corpo = r('corpo');
+      if (!corpo) return;
+      const altro = corpo.scrollHeight - corpo.clientHeight > 2 && corpo.scrollTop + corpo.clientHeight < corpo.scrollHeight - 2;
+      corpo.toggleAttribute('data-altro', altro);
     }
 
     function aggiornaChip() {

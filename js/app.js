@@ -49,7 +49,7 @@ const rottaDaHash = () => ROTTE.find((r) => r.id === location.hash.replace(/^#\/
 function costruisciNavigazione() {
   document.getElementById('nav').innerHTML = ROTTE.map((r) => `
     <button type="button" class="nav-voce" data-rotta="${r.id}">
-      <span class="nav-pillola">${icona(r.icona, 22)}</span>${r.etichetta}
+      <span class="nav-pillola">${icona(r.icona, 22)}</span><span class="nav-etichetta">${r.etichetta}</span>
     </button>`).join('');
   document.getElementById('nav').addEventListener('click', (e) => {
     const id = e.target.closest('[data-rotta]')?.dataset.rotta;
@@ -60,6 +60,31 @@ function costruisciNavigazione() {
 }
 
 /** Cambio d'area chiesto dall'utente (tocco sulla barra): aggiorna la cronologia e la schermata. */
+/**
+ * La barra in basso resta ferma ma si compatta (solo icone) quando si scorre verso il basso e si riespande
+ * (icone e nomi) quando si risale o si torna in cima. Il pulsante + la segue.
+ */
+function inizializzaBarra() {
+  const SOGLIA_CIMA = 24; // sotto questa posizione la barra è sempre estesa
+  const SCATTO = 10; // quanto si deve scorrere prima di cambiare stato (evita sfarfallii)
+  let ultimaY = window.scrollY;
+  let inAttesa = false;
+  const imposta = (compatta) => { document.documentElement.dataset.nav = compatta ? 'compatta' : 'estesa'; };
+  window.addEventListener('scroll', () => {
+    if (inAttesa) return;
+    inAttesa = true;
+    requestAnimationFrame(() => {
+      inAttesa = false;
+      const y = window.scrollY;
+      const dy = y - ultimaY;
+      if (y < SOGLIA_CIMA) imposta(false);
+      else if (dy > SCATTO) imposta(true);
+      else if (dy < -SCATTO) imposta(false);
+      if (Math.abs(dy) > SCATTO || y < SOGLIA_CIMA) ultimaY = y;
+    });
+  }, { passive: true });
+}
+
 function naviga(id) {
   const rotta = ROTTE.find((r) => r.id === id) ?? ROTTE[0];
   if (rotta === rottaCorrente) {
@@ -219,6 +244,7 @@ async function avvia() {
   applicaTema(impostazioni().tema);
   seguiTemaDiSistema();
   costruisciNavigazione();
+  inizializzaBarra();
   inizializzaBlocco();
   controllaBlocco(); // con il blocco attivo, copre subito tutto: i dati non restano visibili
   impostaGestoreIndietro(suCronologia);
@@ -232,6 +258,7 @@ async function avvia() {
 
   document.addEventListener('spese2:movimenti', (e) => istanza?.aggiorna?.({ evento: 'movimenti', ...e.detail }));
   document.addEventListener('spese2:impostazioni', (e) => istanza?.aggiorna?.({ evento: 'impostazioni', ...e.detail }));
+  document.addEventListener('spese2:categorie', (e) => istanza?.aggiorna?.({ evento: 'categorie', ...e.detail }));
   // Tornando all'app dopo ore (o a mezzanotte passata) "Oggi" e i totali vanno riletti.
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') istanza?.aggiorna?.({ evento: 'visibile' });

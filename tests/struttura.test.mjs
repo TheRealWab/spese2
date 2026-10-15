@@ -42,7 +42,7 @@ test('sw.js: tutti i file dell\'app sono in elenco (offline completo)', () => {
     'index.html', 'manifest.webmanifest',
     ...elencaFile('css', ['.css']),
     ...elencaFile('js', ['.js']),
-    'vendor/lucide/icone.js',
+    'vendor/lucide/icone.js', 'vendor/lucide/tag.js',
     ...elencaFile('icons', ['.png', '.svg']),
   ];
   for (const file of necessari) assert.ok(inElenco.has(file), `${file} non è nella cache offline di sw.js`);

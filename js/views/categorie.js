@@ -13,6 +13,8 @@ import { totaliPerCategoria } from '../model/categorie.js';
 import { periodoContenente, periodoValido } from '../model/periodi.js';
 import { creaSelettorePeriodo } from '../components/selettore-periodo.js';
 import { apriDettaglioCategoria } from '../components/dettaglio-categoria.js';
+import { apriEditorCategoria } from '../components/editor-categoria.js';
+import { apriGestioneCategorie } from '../components/gestione-categorie.js';
 
 // Stato che sopravvive al cambio di area: tornando su Categorie si ritrova lo stesso periodo e lo stesso tipo.
 let periodo = null;
@@ -57,6 +59,21 @@ export function monta(radice) {
       </button>`;
   }
 
+  function htmlAzioni() {
+    const entrata = tipo === 'entrata';
+    return `
+      <div class="scheda ct-azioni">
+        <button type="button" class="riga-lista" data-azcat="nuova">
+          <span class="cerchio col-indaco" style="--dim:40px">${icona('plus', 20)}</span>
+          <span class="riga-testo"><span class="riga-titolo">Nuova categoria</span><span class="riga-sotto">Aggiungi una categoria di ${entrata ? 'entrata' : 'spesa'}</span></span>${icona('chevron-right', 18)}
+        </button>
+        <button type="button" class="riga-lista" data-azcat="gestisci">
+          <span class="cerchio cerchio-neutro">${icona('layers', 20)}</span>
+          <span class="riga-testo"><span class="riga-titolo">Gestisci categorie</span><span class="riga-sotto">Modifica, archivia, unisci</span></span>${icona('chevron-right', 18)}
+        </button>
+      </div>`;
+  }
+
   async function disegna({ direzione = 0 } = {}) {
     const mia = ++sequenza;
     const corrente = periodo;
@@ -77,7 +94,8 @@ export function monta(radice) {
              <span class="cerchio cerchio-neutro" style="--dim:64px">${icona('inbox', 30)}</span>
              <h2>${tipo === 'spesa' ? 'Nessuna spesa' : 'Nessuna entrata'}</h2>
              <p>In questo periodo non c'è ancora nulla da mostrare per categoria.</p>
-           </div>`}`;
+           </div>`}
+      ${htmlAzioni()}`;
 
     contenuto.classList.remove('slide-avanti', 'slide-indietro');
     if (direzione) {
@@ -100,6 +118,9 @@ export function monta(radice) {
       disegna();
       return;
     }
+    const azioneCategorie = e.target.closest('[data-azcat]')?.dataset.azcat;
+    if (azioneCategorie === 'nuova') { apriEditorCategoria({ tipo }); return; }
+    if (azioneCategorie === 'gestisci') { apriGestioneCategorie({ tipo }); return; }
     const riga = e.target.closest('.riga-cat');
     if (riga) apriDettaglioCategoria({ categoriaId: riga.dataset.id, periodo, tipo });
   });

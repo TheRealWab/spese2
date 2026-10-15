@@ -84,7 +84,10 @@
   --spessore-icona: 2; /* stesso tratto Lucide ovunque */
 
   /* ---- Layout ---- */
-  --nav-h: 64px;
+  --nav-h: 68px;          /* barra estesa (icone e nomi) */
+  --nav-compatta: 52px;   /* barra compatta (solo icone), mentre si scorre */
+  --nav-margine: 12px;    /* spazio tra la barra fluttuante e il bordo dello schermo */
+  --nav-attuale: var(--nav-h);
   --fab: 56px;
   --safe-sotto: env(safe-area-inset-bottom, 0px);
   --safe-sopra: env(safe-area-inset-top, 0px);

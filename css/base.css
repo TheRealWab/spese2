@@ -78,7 +78,7 @@ button:disabled { cursor: default; }
 
 #vista {
   padding: calc(var(--sp-4) + var(--safe-sopra)) var(--sp-4)
-    calc(var(--nav-h) + var(--safe-sotto) + var(--fab) + var(--sp-8));
+    calc(var(--nav-h) + var(--nav-margine) + var(--safe-sotto) + var(--fab) + var(--sp-8));
   outline: none;
 }
 

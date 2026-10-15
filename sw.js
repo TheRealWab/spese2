@@ -6,7 +6,7 @@
 
 // Va tenuta uguale a VERSIONE_APP in js/versione.js (lo verifica un test).
 // Cambiarla a ogni rilascio: cambia il nome della cache e i file vengono riscaricati.
-const VERSIONE = '1.4.0';
+const VERSIONE = '1.5.0';
 const PREFISSO_CACHE = 'spese2-';
 const CACHE = `${PREFISSO_CACHE}${VERSIONE}`;
 
@@ -41,16 +41,20 @@ const FILE = [
   'js/model/calcoli.js',
   'js/model/catalogo.js',
   'js/model/categorie.js',
+  'js/model/categorie-db.js',
   'js/model/conti.js',
   'js/model/importa-vecchia.js',
   'js/model/importazione.js',
   'js/model/blocco.js',
+  'js/model/file-backup.js',
   'js/model/impostazioni.js',
   'js/model/impronta.js',
   'js/model/movimenti.js',
   'js/model/note.js',
   'js/model/palette.js',
+  'js/model/parole-icone.js',
   'js/model/periodi.js',
+  'js/model/ricerca-icone.js',
   'js/model/seed.js',
   'js/model/sicurezza.js',
   'js/views/altro.js',
@@ -62,9 +66,12 @@ const FILE = [
   'js/components/blocco.js',
   'js/components/backup-ripristina.js',
   'js/components/dettaglio-categoria.js',
+  'js/components/editor-categoria.js',
+  'js/components/gestione-categorie.js',
   'js/components/inserimento.js',
   'js/components/pannello.js',
   'js/components/riga-movimento.js',
+  'js/components/selettore-icona.js',
   'js/components/selettore-periodo.js',
   'js/components/selettori.js',
   'js/components/sicurezza-ui.js',
@@ -72,6 +79,7 @@ const FILE = [
   'js/components/tastierino-pin.js',
   'js/components/toast.js',
   'vendor/lucide/icone.js',
+  'vendor/lucide/tag.js',
   'icons/icon.svg',
   'icons/icon-192.png',
   'icons/icon-512.png',

@@ -119,3 +119,21 @@ export async function perChiave(nome, indice, valore) {
   const { store } = await archivio(nome);
   return comePromessa(store.index(indice).getAll(IDBKeyRange.only(valore)));
 }
+
+/**
+ * Salva ed elimina in più archivi in un'unica transazione: o tutto o niente.
+ * @param {{salva?: Record<string, object[]>, elimina?: Record<string, string[]>}} modifiche
+ */
+export async function applicaModifiche({ salva = {}, elimina = {} }) {
+  const nomi = [...new Set([...Object.keys(salva), ...Object.keys(elimina)])];
+  if (!nomi.length) return;
+  const db = await apriDb();
+  const tx = db.transaction(nomi, 'readwrite');
+  for (const [nome, oggetti] of Object.entries(salva)) {
+    for (const oggetto of oggetti) tx.objectStore(nome).put(oggetto);
+  }
+  for (const [nome, ids] of Object.entries(elimina)) {
+    for (const id of ids) tx.objectStore(nome).delete(id);
+  }
+  return transazioneCompletata(tx);
+}
