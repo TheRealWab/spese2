@@ -48,7 +48,8 @@ let istanza = null;
 const rottaDaHash = () => ROTTE.find((r) => r.id === location.hash.replace(/^#\/?/, '')) ?? ROTTE[0];
 
 function costruisciNavigazione() {
-  document.getElementById('nav').innerHTML = ROTTE.map((r) => `
+  // L'indicatore (il cerchio colorato dietro la voce attiva) è uno solo e scorre da una voce all'altra.
+  document.getElementById('nav').innerHTML = '<span class="nav-indicatore" aria-hidden="true"></span>' + ROTTE.map((r) => `
     <button type="button" class="nav-voce" data-rotta="${r.id}">
       <span class="nav-pillola">${icona(r.icona, 22)}</span><span class="nav-etichetta">${r.etichetta}</span>
     </button>`).join('');
@@ -126,6 +127,10 @@ function mostra(rotta) {
     if (b.dataset.rotta === rotta.id) b.setAttribute('aria-current', 'page');
     else b.removeAttribute('aria-current');
   });
+  const barra = document.getElementById('nav');
+  barra.style.setProperty('--voce-attiva', ROTTE.indexOf(rotta));
+  // Al primo disegno l'indicatore va subito al suo posto; l'animazione vale solo dai cambi successivi.
+  if (!barra.dataset.animata) requestAnimationFrame(() => requestAnimationFrame(() => { barra.dataset.animata = '1'; }));
   window.scrollTo(0, 0);
 }
 
