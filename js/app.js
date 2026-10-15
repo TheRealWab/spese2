@@ -10,6 +10,7 @@ import { esc } from './util/dom.js';
 import { apriInserimento } from './components/inserimento.js';
 import { impostaGestoreIndietro } from './components/pannello.js';
 import { mostraToast } from './components/toast.js';
+import { chiediAggiornamento } from './components/aggiornamento.js';
 import { inizializzaBlocco, controllaBlocco } from './components/blocco.js';
 import { VERSIONE_APP } from './versione.js';
 import * as mese from './views/mese.js';
@@ -184,19 +185,23 @@ function mostraErrore(errore) {
 
 const CHIAVE_AGGIORNATA = 'spese2_aggiornata';
 
-/** Ricarica l'app per applicare l'aggiornamento, ma mai mentre si sta compilando un movimento. */
-function ricaricaQuandoLibero() {
-  const pannelloAperto = () => document.querySelector('.pannello-sfondo') !== null;
-  const ricarica = () => {
-    try { sessionStorage.setItem(CHIAVE_AGGIORNATA, '1'); } catch { /* facoltativo: serve solo al messaggio */ }
-    location.reload();
-  };
-  if (!pannelloAperto()) { ricarica(); return; }
+/** Esegue l'azione subito, oppure appena si chiude l'ultimo pannello: mai mentre si sta compilando un movimento. */
+function quandoLibero(azione) {
+  const pannelloAperto = () => document.querySelector('.pannello-sfondo:not(.avviso-aggiornamento)') !== null;
+  if (!pannelloAperto()) { azione(); return; }
   const attesa = setInterval(() => {
     if (pannelloAperto()) return;
     clearInterval(attesa);
-    ricarica();
+    azione();
   }, 1000);
+}
+
+/** Ricarica l'app per usare i file della nuova versione. */
+function ricaricaQuandoLibero() {
+  quandoLibero(() => {
+    try { sessionStorage.setItem(CHIAVE_AGGIORNATA, '1'); } catch { /* facoltativo: serve solo al messaggio */ }
+    location.reload();
+  });
 }
 
 function avvisaSeAggiornata() {
@@ -207,6 +212,16 @@ function avvisaSeAggiornata() {
   } catch { /* storage non disponibile */ }
 }
 
+/** Chiede alla versione in attesa il proprio numero (per scriverlo nell'avviso); senza risposta entro 1 s, nessun numero. */
+function versioneInAttesa(lavoratore) {
+  return new Promise((ok) => {
+    const canale = new MessageChannel();
+    const timer = setTimeout(() => ok(''), 1000);
+    canale.port1.onmessage = (e) => { clearTimeout(timer); ok(String(e.data ?? '')); };
+    try { lavoratore.postMessage({ tipo: 'versione' }, [canale.port2]); } catch { clearTimeout(timer); ok(''); }
+  });
+}
+
 async function registraServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   const avevaControllo = Boolean(navigator.serviceWorker.controller);
@@ -214,16 +229,43 @@ async function registraServiceWorker() {
     // Nessun "scope" esplicito: è la cartella dell'app (es. /spese2/), mai l'intera origine condivisa.
     const registrazione = await navigator.serviceWorker.register('./sw.js');
 
-    // Aggiornamento automatico: il nuovo service worker si attiva da solo (skipWaiting in sw.js) e,
-    // quando prende il controllo, la pagina si ricarica per usare i file nuovi.
+    // Aggiornamento su conferma: la nuova versione si scarica e resta "in attesa". Appena è pronta si chiede
+    // all'utente; solo con "Aggiorna" si attiva (messaggio 'attiva' a sw.js) e, quando prende il controllo,
+    // la pagina si ricarica per usare i file nuovi.
     let ricaricato = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (!avevaControllo || ricaricato) return; // la prima installazione non deve ricaricare la pagina
       ricaricato = true;
       ricaricaQuandoLibero();
     });
+
+    let inAttesaDiRisposta = false;
+    let rifiutatoAlle = 0;
+    const PAUSA_DOPO_RIFIUTO = 30 * 60 * 1000; // dopo "Più tardi" si richiede al massimo ogni mezz'ora
+    const proponi = () => {
+      const nuova = registrazione.waiting;
+      if (!nuova || !navigator.serviceWorker.controller || inAttesaDiRisposta || ricaricato) return;
+      if (Date.now() - rifiutatoAlle < PAUSA_DOPO_RIFIUTO) return;
+      inAttesaDiRisposta = true;
+      versioneInAttesa(nuova).then((versione) => {
+        quandoLibero(async () => {
+          const aggiorna = await chiediAggiornamento({ versione });
+          inAttesaDiRisposta = false;
+          if (aggiorna) nuova.postMessage({ tipo: 'attiva' });
+          else rifiutatoAlle = Date.now();
+        });
+      });
+    };
+    const osservaInstallazione = (lavoratore) => {
+      lavoratore?.addEventListener('statechange', () => { if (lavoratore.state === 'installed') proponi(); });
+    };
+    osservaInstallazione(registrazione.installing);
+    registrazione.addEventListener('updatefound', () => osservaInstallazione(registrazione.installing));
+    proponi(); // una versione già scaricata e in attesa dall'ultima volta
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') registrazione.update().catch(() => {});
+      if (document.visibilityState !== 'visible') return;
+      registrazione.update().catch(() => {});
+      proponi();
     });
   } catch (errore) {
     console.warn('Service worker non registrato:', errore);

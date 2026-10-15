@@ -6,7 +6,7 @@
 
 // Va tenuta uguale a VERSIONE_APP in js/versione.js (lo verifica un test).
 // Cambiarla a ogni rilascio: cambia il nome della cache e i file vengono riscaricati.
-const VERSIONE = '1.5.0';
+const VERSIONE = '1.5.1';
 const PREFISSO_CACHE = 'spese2-';
 const CACHE = `${PREFISSO_CACHE}${VERSIONE}`;
 
@@ -61,6 +61,7 @@ const FILE = [
   'js/views/categorie.js',
   'js/views/mese.js',
   'js/views/segnaposto.js',
+  'js/components/aggiornamento.js',
   'js/components/importa-guidata.js',
   'js/components/backup-esporta.js',
   'js/components/blocco.js',
@@ -89,13 +90,20 @@ const FILE = [
 // In sviluppo (localhost) si preferisce la rete, così le modifiche si vedono subito; offline vale la cache.
 const SVILUPPO = ['localhost', '127.0.0.1', '[::1]'].includes(self.location.hostname);
 
+// TRANSITORIO (da togliere dopo il rilascio successivo alla 1.5.1): la 1.5.0 installata sul telefono non sa
+// chiedere conferma all'utente, quindi per quella sola volta l'aggiornamento resta automatico.
+const CACHE_SENZA_AVVISO = `${PREFISSO_CACHE}1.5.0`;
+
 self.addEventListener('install', (evento) => {
-  // La nuova versione si attiva subito, senza aspettare che l'app venga chiusa: la pagina aperta
-  // si ricarica da sola (vedi app.js) e l'utente non deve fare nulla.
-  self.skipWaiting();
+  // La nuova versione NON si attiva da sola: resta "in attesa" finché l'utente, dall'avviso dell'app,
+  // sceglie "Aggiorna" (messaggio 'attiva' qui sotto).
   // cache: 'reload' salta la cache HTTP di GitHub Pages (max-age=600): senza, per ~10 minuti dopo una
   // pubblicazione la nuova cache potrebbe riempirsi di file vecchi.
-  evento.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(FILE.map((file) => new Request(file, { cache: 'reload' })))));
+  evento.waitUntil((async () => {
+    if ((await caches.keys()).includes(CACHE_SENZA_AVVISO)) self.skipWaiting();
+    const cache = await caches.open(CACHE);
+    await cache.addAll(FILE.map((file) => new Request(file, { cache: 'reload' })));
+  })());
 });
 
 self.addEventListener('activate', (evento) => {
@@ -110,6 +118,7 @@ self.addEventListener('activate', (evento) => {
 
 self.addEventListener('message', (evento) => {
   if (evento.data?.tipo === 'attiva') self.skipWaiting();
+  if (evento.data?.tipo === 'versione') evento.ports[0]?.postMessage(VERSIONE); // per scriverla nell'avviso di aggiornamento
 });
 
 self.addEventListener('fetch', (evento) => {
