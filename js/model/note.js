@@ -55,3 +55,37 @@ export function segmentiBarra(voci, massimo = 5) {
 }
 
 export const filtraPerNota = (movimenti, chiave) => movimenti.filter((m) => chiaveNota(m.nota) === chiave);
+
+// ---- Gestione delle note: rinomina e unione (SPEC §6.4) ----
+
+export const LUNGHEZZA_MAX_NOTA = 80; // come il campo nota dell'inserimento
+
+/** Messaggio d'errore in italiano per il nuovo nome di una nota, oppure null se va bene. */
+export function validaNomeNota(nome) {
+  const pulito = normalizzaNota(nome);
+  if (!pulito) return 'Scrivi il nome della nota.';
+  if (pulito.length > LUNGHEZZA_MAX_NOTA) return `La nota può avere al massimo ${LUNGHEZZA_MAX_NOTA} caratteri.`;
+  return null;
+}
+
+/**
+ * Cosa succede dando `nuovoNome` alla nota `chiaveOrigine`. Se esiste già un'altra nota con quel nome (a meno di
+ * maiuscole e spazi) le due si uniscono, e si usa la grafia di quella esistente: `unisceCon` è allora la sua voce.
+ * `voci` viene da scomponiPerNota.
+ */
+export function risolviNuovoNome(voci, chiaveOrigine, nuovoNome) {
+  const nome = normalizzaNota(nuovoNome);
+  const esistente = voci.find((v) => v.chiave !== chiaveOrigine && v.chiave !== CHIAVE_SENZA_NOTA && v.chiave === chiaveNota(nome));
+  return esistente ? { nome: esistente.nota, unisceCon: esistente } : { nome, unisceCon: null };
+}
+
+/**
+ * I movimenti che cambiano quando la nota `chiaveOrigine` diventa `nuovoNome`. Restituisce `modificati` (da salvare)
+ * e `originali` (gli stessi movimenti com'erano, per annullare). Chi ha già esattamente quel testo non cambia.
+ */
+export function pianoNota(movimenti, chiaveOrigine, nuovoNome, adesso) {
+  const nome = normalizzaNota(nuovoNome);
+  if (chiaveOrigine === CHIAVE_SENZA_NOTA || !nome) return { originali: [], modificati: [] };
+  const originali = movimenti.filter((m) => chiaveNota(m.nota) === chiaveOrigine && normalizzaNota(m.nota) !== nome);
+  return { originali, modificati: originali.map((m) => ({ ...m, nota: nome, modificatoIl: adesso })) };
+}

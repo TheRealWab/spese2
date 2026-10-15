@@ -3,6 +3,7 @@
 
 import { apriPannello } from './pannello.js';
 import { apriInserimento } from './inserimento.js';
+import { apriGestioneNote } from './gestione-note.js';
 import { htmlRigaMovimento } from './riga-movimento.js';
 import { esc } from '../util/dom.js';
 import { icona, cerchioIcona } from '../util/icone.js';
@@ -114,7 +115,10 @@ export function apriDettaglioCategoria({ categoriaId, periodo, tipo }) {
 
     return `
       <section class="scheda ct-note" aria-label="Scomposizione per nota">
-        <h3 class="ct-note-titolo">Per nota</h3>
+        <div class="ct-note-testata">
+          <h3 class="ct-note-titolo">Per nota</h3>
+          <button type="button" class="chip" data-az="gestisci-note">${icona('pencil', 16)} Gestisci note</button>
+        </div>
         <div class="nota-barra" role="img" aria-label="Scomposizione per nota">${barra}</div>
         <div class="nota-elenco">${righe}</div>
         <p class="ct-note-aiuto">Tocca una nota per vedere solo quei movimenti.</p>
@@ -152,6 +156,8 @@ export function apriDettaglioCategoria({ categoriaId, periodo, tipo }) {
     const riga = e.target.closest('.riga-mov');
     if (az === 'chiudi') {
       c.chiudi(undefined);
+    } else if (az === 'gestisci-note') {
+      apriGestioneNote({ categoriaId });
     } else if (az === 'togli-filtro') {
       stato.filtro = null;
       disegna();

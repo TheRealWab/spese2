@@ -6,7 +6,7 @@
 
 // Va tenuta uguale a VERSIONE_APP in js/versione.js (lo verifica un test).
 // Cambiarla a ogni rilascio: cambia il nome della cache e i file vengono riscaricati.
-const VERSIONE = '1.5.2';
+const VERSIONE = '1.6.0';
 const PREFISSO_CACHE = 'spese2-';
 const CACHE = `${PREFISSO_CACHE}${VERSIONE}`;
 
@@ -51,6 +51,7 @@ const FILE = [
   'js/model/impronta.js',
   'js/model/movimenti.js',
   'js/model/note.js',
+  'js/model/note-db.js',
   'js/model/palette.js',
   'js/model/parole-icone.js',
   'js/model/periodi.js',
@@ -62,6 +63,7 @@ const FILE = [
   'js/views/mese.js',
   'js/views/segnaposto.js',
   'js/components/aggiornamento.js',
+  'js/components/gestione-note.js',
   'js/components/importa-guidata.js',
   'js/components/backup-esporta.js',
   'js/components/blocco.js',
@@ -90,7 +92,7 @@ const FILE = [
 // In sviluppo (localhost) si preferisce la rete, così le modifiche si vedono subito; offline vale la cache.
 const SVILUPPO = ['localhost', '127.0.0.1', '[::1]'].includes(self.location.hostname);
 
-// TRANSITORIO (da togliere dopo il rilascio successivo alla 1.5.1): la 1.5.0 installata sul telefono non sa
+// TRANSITORIO (da togliere in uno dei prossimi rilasci): la 1.5.0 eventualmente ancora installata sul telefono non sa
 // chiedere conferma all'utente, quindi per quella sola volta l'aggiornamento resta automatico.
 const CACHE_SENZA_AVVISO = `${PREFISSO_CACHE}1.5.0`;
 

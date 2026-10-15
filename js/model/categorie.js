@@ -127,6 +127,26 @@ export function pianoUnione({ movimenti, ricorrenti = [] }, origineId, destinazi
   };
 }
 
+/**
+ * Riordino manuale: `idsInOrdine` sono gli id delle categorie ATTIVE di `tipo` nell'ordine voluto. Si riassegnano
+ * i valori di `ordine` che quelle categorie già occupavano (così non si toccano né le archiviate né l'altro tipo).
+ * Restituisce solo le categorie che cambiano; lancia un errore se gli id non sono esattamente quelli attivi del tipo.
+ */
+export function pianoRiordino(categorie, tipo, idsInOrdine) {
+  const attive = ordinaManuale(categorie.filter((c) => c.tipo === tipo && !c.archiviata));
+  const uguali = idsInOrdine.length === attive.length && new Set(idsInOrdine).size === attive.length
+    && idsInOrdine.every((id) => attive.some((c) => c.id === id));
+  if (!uguali) throw new Error('Elenco di categorie non valido per il riordino.');
+  // Posti disponibili, in ordine crescente e senza ripetizioni (se due categorie avevano lo stesso valore, si distanziano).
+  const posti = [];
+  for (const c of attive) posti.push(Math.max(c.ordine ?? 0, posti.length ? posti[posti.length - 1] + 1 : -Infinity));
+  const perId = new Map(attive.map((c) => [c.id, c]));
+  return idsInOrdine
+    .map((id, i) => ({ categoria: perId.get(id), ordine: posti[i] }))
+    .filter(({ categoria, ordine }) => categoria.ordine !== ordine)
+    .map(({ categoria, ordine }) => ({ ...categoria, ordine }));
+}
+
 /** Posizione per una categoria nuova: in fondo a tutte. */
 export const prossimoOrdine = (categorie) => Math.max(-1, ...categorie.map((c) => c.ordine ?? 0)) + 1;
 

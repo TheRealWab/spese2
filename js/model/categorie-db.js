@@ -7,7 +7,7 @@ import { esisteIcona } from '../util/icone.js';
 import { caricaCatalogo } from './catalogo.js';
 import { COLORI_CATEGORIA } from './palette.js';
 import {
-  validaCategoria, puoArchiviare, puoEliminare, puoUnire, pianoUnione, prossimoOrdine, pulisciNomeCategoria,
+  validaCategoria, puoArchiviare, puoEliminare, puoUnire, pianoUnione, pianoRiordino, prossimoOrdine, pulisciNomeCategoria,
 } from './categorie.js';
 
 /** Errore con un messaggio già pronto da mostrare all'utente. */
@@ -70,6 +70,14 @@ export async function archiviaCategoria(id, archiviata = true) {
   }
   await salva('categorie', { ...attuale, archiviata });
   await avvisa({ azione: archiviata ? 'archiviata' : 'ripristinata', id });
+}
+
+/** Salva il nuovo ordine manuale delle categorie attive di un tipo (tutto o niente). */
+export async function riordinaCategorie(tipo, idsInOrdine) {
+  const cambiate = pianoRiordino(await tutti('categorie'), tipo, idsInOrdine);
+  if (!cambiate.length) return;
+  await applicaModifiche({ salva: { categorie: cambiate } });
+  await avvisa({ azione: 'riordinate', tipo });
 }
 
 /** Elimina una categoria vuota. */

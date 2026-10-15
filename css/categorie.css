@@ -116,3 +116,34 @@
 .ed-nota { display: flex; align-items: flex-start; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); font-size: var(--t-s); color: var(--testo-2); }
 .ed-nota .icona { flex: none; margin-top: 1px; }
 .ed-pericolo .riga-titolo, .ed-pericolo .icona { color: var(--rosso); }
+
+/* ---- Gestione categorie: riordino con la maniglia ---- */
+.ct-riga { display: flex; align-items: stretch; background: var(--scheda); }
+.ct-riga + .ct-riga { border-top: 1px solid var(--bordo); }
+.ct-riga .riga-lista { flex: 1; min-width: 0; width: auto; }
+.ct-maniglia {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 52px;
+  color: var(--testo-3);
+  touch-action: none; /* il dito sulla maniglia trascina la riga invece di far scorrere la pagina */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  cursor: grab;
+}
+.ct-maniglia:focus-visible { outline: 2px solid var(--accento); outline-offset: -2px; border-radius: var(--r-m); }
+.ct-lista.in-riordino { -webkit-user-select: none; user-select: none; }
+.ct-lista.in-riordino .ct-riga { transition: transform var(--dur-2) var(--ease); }
+.ct-lista .ct-riga.trascinata {
+  position: relative;
+  z-index: 2;
+  transition: none;
+  border-radius: var(--r-m);
+  box-shadow: var(--ombra-alta);
+}
+.ct-lista .ct-riga.trascinata .ct-maniglia { color: var(--accento); cursor: grabbing; }
+
+/* ---- Dettaglio categoria: intestazione della scomposizione per nota ---- */
+.ct-note-testata { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
