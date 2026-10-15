@@ -99,6 +99,24 @@ export function riepilogoInvestimento(storia, oggi) {
   };
 }
 
+/**
+ * Come si divide il patrimonio tra investito (conti investimenti) e non investito (tutti gli altri conti attivi).
+ * Le percentuali sono intere e sommano 100. Restituisce null se non ha senso dividerlo (patrimonio zero o negativo,
+ * oppure una delle due parti negativa, per esempio uno scoperto): in quel caso la barra non si mostra.
+ */
+export function ripartizioneInvestito(storie, data) {
+  let investito = 0;
+  let nonInvestito = 0;
+  for (const s of storie.values()) {
+    if (s.conto.archiviato) continue;
+    if (s.conto.tipo === 'investimenti') investito += s.saldoAl(data); else nonInvestito += s.saldoAl(data);
+  }
+  const totale = investito + nonInvestito;
+  if (totale <= 0 || investito < 0 || nonInvestito < 0) return null;
+  const percentualeInvestito = Math.round((investito / totale) * 100);
+  return { investito, nonInvestito, totale, percentualeInvestito, percentualeNonInvestito: 100 - percentualeInvestito };
+}
+
 /** Variazione del patrimonio rispetto a un mese prima. `percentuale` è null se un mese fa era zero o negativo. */
 export function variazioneRispettoAMeseFa(storie, oggi) {
   const prima = patrimonioAl(storie, aggiungiMesi(oggi, -1));

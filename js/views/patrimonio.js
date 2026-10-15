@@ -12,7 +12,7 @@ import { tutti } from '../db.js';
 import { tuttiIConti } from '../model/conti.js';
 import { periodoContenente, periodoValido } from '../model/periodi.js';
 import {
-  creaStorie, patrimonioAl, riepilogoInvestimento, variazioneRispettoAMeseFa, serieAndamento, primaDataConDati,
+  creaStorie, patrimonioAl, ripartizioneInvestito, riepilogoInvestimento, variazioneRispettoAMeseFa, serieAndamento, primaDataConDati,
   intervalloGrafico, etichettaAggiornamento,
 } from '../model/patrimonio.js';
 import { ETICHETTA_TIPO_CONTO } from '../model/conti.js';
@@ -75,7 +75,30 @@ export function monta(radice) {
         <p class="ind-et">Patrimonio totale</p>
         <div class="ind-riga"><span class="ind-valore" data-r="totale"></span></div>
         <p class="pt-variazione ${classeVariazione(segnoCent)}">${icona(segnoCent < 0 ? 'trending-down' : 'trending-up', 18)}<span>${esc(importo + percentuale)} nell'ultimo mese</span></p>
+        ${htmlRipartizione()}
       </section>`;
+  }
+
+  /** La barra "investito / non investito" sotto il totale (assente se il patrimonio non è divisibile in modo sensato). */
+  function htmlRipartizione() {
+    const r = ripartizioneInvestito(dati.storie, dati.oggi);
+    if (!r) return '';
+    const voce = (classe, nome, percentuale, cent) => `
+      <div class="pt-rip-voce">
+        <span class="pt-rip-punto ${classe}"></span>
+        <span class="pt-rip-testo"><span class="pt-rip-nome">${nome} <strong>${percentuale}%</strong></span><span class="pt-rip-importo">${esc(mostraImporto(cent))}</span></span>
+      </div>`;
+    return `
+      <div class="pt-rip" role="group" aria-label="Divisione tra investito e non investito">
+        <div class="pt-rip-barra" role="img" aria-label="Investito ${r.percentualeInvestito}%, non investito ${r.percentualeNonInvestito}%">
+          <span class="pt-rip-seg pt-inv-seg" style="flex:${Math.max(r.percentualeInvestito, r.investito > 0 ? 2 : 0)}"></span>
+          <span class="pt-rip-seg pt-non-seg" style="flex:${Math.max(r.percentualeNonInvestito, r.nonInvestito > 0 ? 2 : 0)}"></span>
+        </div>
+        <div class="pt-rip-legenda">
+          ${voce('pt-inv-seg', 'Investito', r.percentualeInvestito, r.investito)}
+          ${voce('pt-non-seg', 'Non investito', r.percentualeNonInvestito, r.nonInvestito)}
+        </div>
+      </div>`;
   }
 
   function htmlRigaConto(conto) {

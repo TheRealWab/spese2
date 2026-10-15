@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  effettoMovimento, creaStoriaConto, creaStorie, patrimonioAl, riepilogoInvestimento, variazioneRispettoAMeseFa,
+  effettoMovimento, ripartizioneInvestito, creaStoriaConto, creaStorie, patrimonioAl, riepilogoInvestimento, variazioneRispettoAMeseFa,
   dateCampione, serieAndamento, primaDataConDati, intervalloGrafico, etichettaAggiornamento, movimentiDelConto,
 } from '../js/model/patrimonio.js';
 import {
@@ -229,4 +229,30 @@ test('leggiImporto: formati italiani e piccoli errori', () => {
   ];
   for (const [testo, atteso] of casi) assert.equal(leggiImporto(testo), atteso, testo);
   for (const testo of ['', '   ', 'abc', '12,345', '1,2,3x', '--5', ',', '12,3.4,5', '€']) assert.equal(leggiImporto(testo), null, testo);
+});
+
+test('ripartizioneInvestito: investito e non investito, percentuali intere che sommano 100', () => {
+  const conti = [conto('a', 'conto', 300000), conto('c', 'liquidità', 100000), conto('i', 'investimenti', 100000)];
+  const r = ripartizioneInvestito(creaStorie(conti, []), '2026-03-01');
+  assert.deepEqual([r.investito, r.nonInvestito, r.totale], [100000, 400000, 500000]);
+  assert.deepEqual([r.percentualeInvestito, r.percentualeNonInvestito], [20, 80]);
+  const tre = ripartizioneInvestito(creaStorie([conto('a', 'conto', 2000), conto('i', 'investimenti', 1000)], []), '2026-03-01');
+  assert.equal(tre.percentualeInvestito + tre.percentualeNonInvestito, 100); // 33 + 67
+});
+
+test('ripartizioneInvestito: il PAC sposta tra le due parti ma il totale non cambia; investimenti al valore inserito', () => {
+  const conti = [conto('a', 'conto', 300000), conto('i', 'investimenti', 100000)];
+  const prima = ripartizioneInvestito(creaStorie(conti, []), '2026-03-01');
+  const dopo = ripartizioneInvestito(creaStorie(conti, [giro('a', 'i', 50000, '2026-02-01')]), '2026-03-01');
+  assert.equal(prima.totale, dopo.totale);
+  assert.deepEqual([dopo.investito, dopo.nonInvestito], [150000, 250000]);
+  const conValore = ripartizioneInvestito(creaStorie(conti, [], [valore('i', '2026-02-01', 120000)]), '2026-03-01');
+  assert.equal(conValore.investito, 120000);
+});
+
+test('ripartizioneInvestito: senza senso (zero, scoperto) non si mostra; i conti archiviati non contano', () => {
+  assert.equal(ripartizioneInvestito(creaStorie([conto('a', 'conto', 0)], []), '2026-03-01'), null);
+  assert.equal(ripartizioneInvestito(creaStorie([conto('a', 'conto', -5000), conto('i', 'investimenti', 100000)], []), '2026-03-01'), null);
+  const soloAttivi = ripartizioneInvestito(creaStorie([conto('a', 'conto', 1000), conto('i', 'investimenti', 1000, '2026-01-01', { archiviato: true })], []), '2026-03-01');
+  assert.deepEqual([soloAttivi.percentualeInvestito, soloAttivi.percentualeNonInvestito], [0, 100]);
 });

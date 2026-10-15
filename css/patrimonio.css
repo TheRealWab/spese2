@@ -12,6 +12,20 @@
 .pt-variazione.pt-su { color: var(--verde); }
 .pt-variazione.pt-giu { color: var(--rosso); }
 
+/* ---- Divisione investito / non investito ---- */
+.pt-rip { display: grid; gap: var(--sp-3); margin-top: var(--sp-3); padding-top: var(--sp-4); border-top: 1px solid var(--bordo); }
+.pt-rip-barra { display: flex; gap: 3px; height: 14px; overflow: hidden; border-radius: var(--r-pieno); background: var(--scheda-2); }
+.pt-rip-seg { min-width: 0; border-radius: var(--r-pieno); }
+.pt-inv-seg { background: var(--accento); }
+.pt-non-seg { background: var(--cat-turchese); }
+.pt-rip-legenda { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3); }
+.pt-rip-voce { display: flex; align-items: flex-start; gap: var(--sp-2); min-width: 0; }
+.pt-rip-punto { flex: none; width: 10px; height: 10px; margin-top: 5px; border-radius: 50%; }
+.pt-rip-testo { display: grid; min-width: 0; }
+.pt-rip-nome { font-size: var(--t-s); font-weight: 600; color: var(--testo-2); }
+.pt-rip-nome strong { color: var(--testo); }
+.pt-rip-importo { font-size: var(--t-s); font-weight: 700; white-space: nowrap; }
+
 /* ---- Grafico ---- */
 .pt-grafico { display: grid; gap: var(--sp-3); padding: var(--sp-4); }
 .pt-grafico .mese-testata { margin-bottom: var(--sp-2); }
