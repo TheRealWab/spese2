@@ -1,0 +1,27 @@
+/* Movimenti ricorrenti: elenco, editor e schede di conferma. */
+
+.er-campi { display: grid; gap: var(--sp-3); padding: var(--sp-4); }
+.er-fine { display: flex; align-items: center; gap: var(--sp-2); }
+.er-fine .campo-data { flex: 1; min-width: 0; }
+.er-giorni { margin-top: var(--sp-3); }
+.er-anteprima { min-height: 1.3em; padding: 0 var(--sp-2); font-size: var(--t-s); color: var(--testo-2); }
+.er-quando { color: var(--accento-forte); font-weight: 600; }
+.er-quando.in-pausa { color: var(--testo-3); }
+.er-importo { font-size: var(--t-m); font-weight: 650; color: var(--testo); }
+.er-importo.importo-entrata { color: var(--verde); }
+
+/* ---- Scheda di conferma (dialogo senza cronologia) ---- */
+.dialogo-azioni-colonna { grid-template-columns: 1fr; }
+.scheda-ric { justify-items: center; }
+.scheda-ric-passo { font-size: var(--t-xs); font-weight: 600; color: var(--testo-3); }
+.scheda-ric-importo { font-size: var(--t-xl); font-weight: 750; letter-spacing: -0.02em; color: var(--testo); }
+.scheda-ric-importo.importo-entrata { color: var(--verde); }
+.scheda-ric-sotto { font-size: var(--t-s); color: var(--testo-2); }
+.scheda-ric-campo { width: 100%; }
+.scheda-ric-campo .campo-testo { text-align: center; font-size: var(--t-l); font-weight: 700; }
+.scheda-ric-secondarie { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); }
+.scheda-ric-dopo { min-height: var(--tocco); font-size: var(--t-s); font-weight: 600; color: var(--testo-2); }
+
+/* I sette giorni della settimana stanno in una riga sola. */
+.er-giorni { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.er-giorni .chip { justify-content: center; padding: 0; min-width: 0; }

@@ -6,7 +6,7 @@
 
 // Va tenuta uguale a VERSIONE_APP in js/versione.js (lo verifica un test).
 // Cambiarla a ogni rilascio: cambia il nome della cache e i file vengono riscaricati.
-const VERSIONE = '1.8.0';
+const VERSIONE = '1.9.0';
 const PREFISSO_CACHE = 'spese2-';
 const CACHE = `${PREFISSO_CACHE}${VERSIONE}`;
 
@@ -26,6 +26,7 @@ const FILE = [
   'css/categorie.css',
   'css/patrimonio.css',
   'css/grafici.css',
+  'css/ricorrenti.css',
   'js/app.js',
   'js/db.js',
   'js/versione.js',
@@ -62,6 +63,8 @@ const FILE = [
   'js/model/parole-icone.js',
   'js/model/periodi.js',
   'js/model/ricerca-icone.js',
+  'js/model/ricorrenti.js',
+  'js/model/ricorrenti-db.js',
   'js/model/seed.js',
   'js/model/sicurezza.js',
   'js/views/altro.js',
@@ -80,6 +83,7 @@ const FILE = [
   'js/components/dettaglio-categoria.js',
   'js/components/dettaglio-conto.js',
   'js/components/editor-categoria.js',
+  'js/components/editor-ricorrente.js',
   'js/components/editor-conto.js',
   'js/components/gestione-categorie.js',
   'js/components/gestione-conti.js',
@@ -88,6 +92,8 @@ const FILE = [
   'js/components/inserimento.js',
   'js/components/pannello.js',
   'js/components/riga-movimento.js',
+  'js/components/ricorrenti-elenco.js',
+  'js/components/schede-ricorrenti.js',
   'js/components/selettore-icona.js',
   'js/components/selettore-periodo.js',
   'js/components/selettori.js',

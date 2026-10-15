@@ -4,6 +4,7 @@
 import { apriPannello } from './pannello.js';
 import { creaTastierino, applicaTasto } from './tastierino.js';
 import { scegliConto, scegliData, conferma } from './selettori.js';
+import { apriEditorRicorrente } from './editor-ricorrente.js';
 import { mostraToast } from './toast.js';
 import { esc, $, animaClasse, vibra, attendi, movimentoRidotto } from '../util/dom.js';
 import { icona, cerchioIcona } from '../util/icone.js';
@@ -212,10 +213,15 @@ export async function apriInserimento({ movimento = null, iniziale = {} } = {}) 
         </button>`;
       const dataBreve = stato.data === oggi || stato.data === aggiungiGiorni(oggi, -1)
         ? etichettaGiorno(stato.data, oggi) : dataLunga(stato.data);
+      // "Rendi ricorrente" solo per un movimento già salvato e non generato da un ricorrente.
+      const chipRicorrente = modifica && !movimento.ricorrenteId ? `
+        <button type="button" class="chip" data-az="ricorrente" aria-label="Rendi ricorrente questo movimento">
+          ${icona('repeat', 16)}<span class="chip-testo">Rendi ricorrente</span>
+        </button>` : '';
       r('riga-a').innerHTML = `${chipConto}
         <button type="button" class="chip chip-data" data-az="data" aria-label="Data: ${dataLunga(stato.data)}. Cambia data">
           ${icona('calendar', 18)}<span class="chip-testo">${esc(dataBreve)}</span>
-        </button>`;
+        </button>${chipRicorrente}`;
     }
 
     function htmlSuggerimenti(voci) {
@@ -367,6 +373,14 @@ export async function apriInserimento({ movimento = null, iniziale = {} } = {}) 
       }
     }
 
+    /** Apre l'editor dei ricorrenti precompilato con questo movimento (come lo si vede ora nel modulo). */
+    async function rendiRicorrente() {
+      const dati = datiMovimento();
+      const errore = validaMovimento(dati);
+      if (errore) { mostraToast(errore); return; }
+      await apriEditorRicorrente({ daMovimento: { ...dati, id: movimento.id } });
+    }
+
     async function elimina() {
       const descrizione = `${euro(movimento.importo)} del ${dataLunga(movimento.data)}`;
       const ok = await conferma({
@@ -406,6 +420,7 @@ export async function apriInserimento({ movimento = null, iniziale = {} } = {}) 
         case 'chiudi': return c.chiudi(undefined);
         case 'salva': return salva();
         case 'elimina': return elimina();
+        case 'ricorrente': return rendiRicorrente();
         case 'conto': return cambiaConto('da');
         case 'scegli-da': return cambiaConto('da');
         case 'scegli-a': return cambiaConto('a');

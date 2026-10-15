@@ -7,6 +7,7 @@ import { impostazioni, salvaImpostazioni } from '../model/impostazioni.js';
 import { contiAttivi, contoPerId } from '../model/catalogo.js';
 import { scegliConto, scegliNumero, scegliAbbinamento } from '../components/selettori.js';
 import { apriImportazione } from '../components/importa-guidata.js';
+import { apriRicorrenti } from '../components/ricorrenti-elenco.js';
 import { apriSicurezza } from '../components/sicurezza-ui.js';
 import { sicurezza } from '../model/blocco.js';
 import { apriEsportaBackup } from '../components/backup-esporta.js';
@@ -17,10 +18,6 @@ import { VERSIONE_APP, FASE_APP } from '../versione.js';
 
 const TEMI = [['auto', 'Automatico'], ['chiaro', 'Chiaro'], ['scuro', 'Scuro']];
 const ORDINI = [['frequenza', 'Più usate'], ['manuale', 'Manuale']];
-
-const VOCI_FUTURE = [
-  ['repeat', 'Movimenti ricorrenti', 'Stipendio, PAC, abbonamenti'],
-];
 
 const segmentato = (opzioni, attivo, nome) => `
   <div class="segmentato" role="group" aria-label="${nome}">
@@ -71,6 +68,16 @@ export function monta(radice) {
       </section>
 
       <section class="gruppo">
+        <h2 class="gruppo-titolo">Automazioni</h2>
+        <div class="scheda">
+          <button type="button" class="riga-lista" data-az="ricorrenti">
+            <span class="cerchio cerchio-neutro">${icona('repeat', 20)}</span>
+            <span class="riga-testo"><span class="riga-titolo">Movimenti ricorrenti</span><span class="riga-sotto">Stipendio, PAC, abbonamenti</span></span>${icona('chevron-right', 18)}
+          </button>
+        </div>
+      </section>
+
+      <section class="gruppo">
         <h2 class="gruppo-titolo">Dati e sicurezza</h2>
         <div class="scheda">
           <button type="button" class="riga-lista" data-az="importa">
@@ -86,12 +93,6 @@ export function monta(radice) {
             <span class="cerchio cerchio-neutro">${icona('shield-check', 20)}</span>
             <span class="riga-testo"><span class="riga-titolo">Sicurezza</span><span class="riga-sotto">${blocco.attiva ? (blocco.impronta ? 'Blocco attivo con PIN e impronta' : 'Blocco attivo con PIN') : 'Sblocco con impronta e PIN'}</span></span>${icona('chevron-right', 18)}
           </button>
-          ${VOCI_FUTURE.map(([nomeIcona, titolo, sotto]) => `
-            <button type="button" class="riga-lista" disabled aria-disabled="true">
-              <span class="cerchio cerchio-neutro">${icona(nomeIcona, 20)}</span>
-              <span class="riga-testo"><span class="riga-titolo">${titolo}</span><span class="riga-sotto">${sotto}</span></span>
-              <span class="badge">In arrivo</span>
-            </button>`).join('')}
         </div>
       </section>
 
@@ -156,6 +157,8 @@ export function monta(radice) {
         await salvaImpostazioni({ giornoInizioMese: scelto });
         disegna();
       }
+    } else if (az === 'ricorrenti') {
+      apriRicorrenti();
     } else if (az === 'importa') {
       apriImportazione();
     } else if (az === 'sicurezza') {

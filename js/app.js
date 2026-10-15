@@ -11,6 +11,8 @@ import { apriInserimento } from './components/inserimento.js';
 import { impostaGestoreIndietro } from './components/pannello.js';
 import { mostraToast } from './components/toast.js';
 import { chiediAggiornamento } from './components/aggiornamento.js';
+import { mostraSchedeRicorrenti } from './components/schede-ricorrenti.js';
+import { elaboraRicorrenti } from './model/ricorrenti-db.js';
 import { inizializzaBlocco, controllaBlocco } from './components/blocco.js';
 import { VERSIONE_APP } from './versione.js';
 import * as mese from './views/mese.js';
@@ -179,7 +181,7 @@ const CHIAVE_AGGIORNATA = 'spese2_aggiornata';
 
 /** Esegue l'azione subito, oppure appena si chiude l'ultimo pannello: mai mentre si sta compilando un movimento. */
 function quandoLibero(azione) {
-  const pannelloAperto = () => document.querySelector('.pannello-sfondo:not(.avviso-aggiornamento)') !== null;
+  const pannelloAperto = () => document.querySelector('.pannello-sfondo:not(.avviso-app)') !== null;
   if (!pannelloAperto()) { azione(); return; }
   const attesa = setInterval(() => {
     if (pannelloAperto()) return;
@@ -264,6 +266,31 @@ async function registraServiceWorker() {
   }
 }
 
+// ---- Movimenti ricorrenti ----
+// L'app non gira in background: all'apertura (e quando si torna dopo un cambio di giorno) si registrano le scadenze
+// dovute e si chiede conferma per quelle "con conferma". Mai doppioni: lo garantisce elaboraRicorrenti.
+
+let ricorrentiElaboratiIl = null;
+let elaborazioneInCorso = false;
+
+async function eseguiRicorrenti({ forza = false } = {}) {
+  const oggi = oggiIso();
+  if (elaborazioneInCorso || (!forza && ricorrentiElaboratiIl === oggi)) return;
+  elaborazioneInCorso = true;
+  try {
+    const esito = await elaboraRicorrenti(oggi);
+    ricorrentiElaboratiIl = oggi;
+    if (esito.registrati) mostraToast(`Registrati ${esito.registrati} ${esito.registrati === 1 ? 'movimento ricorrente' : 'movimenti ricorrenti'}`, { durata: 4500 });
+    if (esito.problemi.length) mostraToast(`${esito.problemi.length === 1 ? 'Un ricorrente non è stato registrato' : `${esito.problemi.length} ricorrenti non sono stati registrati`}: controllali in Altro`, { durata: 6000 });
+    if (esito.altre) setTimeout(() => eseguiRicorrenti({ forza: true }), 1500); // oltre il tetto per apertura: si continua a blocchi
+    if (esito.inAttesa.length) quandoLibero(() => mostraSchedeRicorrenti(esito.inAttesa));
+  } catch (errore) {
+    console.error('Ricorrenti non elaborati:', errore);
+  } finally {
+    elaborazioneInCorso = false;
+  }
+}
+
 async function avvia() {
   try {
     await apriDb();
@@ -294,11 +321,19 @@ async function avvia() {
   document.addEventListener('spese2:impostazioni', (e) => istanza?.aggiorna?.({ evento: 'impostazioni', ...e.detail }));
   document.addEventListener('spese2:categorie', (e) => istanza?.aggiorna?.({ evento: 'categorie', ...e.detail }));
   document.addEventListener('spese2:conti', (e) => istanza?.aggiorna?.({ evento: 'conti', ...e.detail }));
+  // Un ricorrente nuovo, modificato o ripreso si elabora subito (le sue scadenze passate si registrano senza aspettare).
+  document.addEventListener('spese2:ricorrenti', (e) => {
+    istanza?.aggiorna?.({ evento: 'ricorrenti', ...e.detail });
+    if (['creato', 'modificato', 'ripreso'].includes(e.detail?.azione)) eseguiRicorrenti({ forza: true });
+  });
   // Tornando all'app dopo ore (o a mezzanotte passata) "Oggi" e i totali vanno riletti.
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') istanza?.aggiorna?.({ evento: 'visibile' });
+    if (document.visibilityState !== 'visible') return;
+    istanza?.aggiorna?.({ evento: 'visibile' });
+    eseguiRicorrenti(); // se è cambiato il giorno, ci sono nuove scadenze
   });
 
+  eseguiRicorrenti();
   navigator.storage?.persist?.().catch(() => {}); // chiede al browser di non cancellare i dati se serve spazio
   registraServiceWorker();
 }

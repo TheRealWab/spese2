@@ -73,3 +73,9 @@ export function cicloSuccessivo(ciclo, giornoInizio = 1) {
 export function dentroCiclo(iso, ciclo) {
   return iso >= ciclo.inizio && iso <= ciclo.fine;
 }
+
+/** Giorno della settimana con lunedì = 0 … domenica = 6. */
+export function giornoSettimana(iso) {
+  const { a, m, g } = daIso(iso);
+  return (new Date(Date.UTC(a, m - 1, g)).getUTCDay() + 6) % 7;
+}

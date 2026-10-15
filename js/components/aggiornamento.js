@@ -14,7 +14,7 @@ export function chiediAggiornamento({ versione = '' } = {}) {
   aperto = true;
 
   const sfondo = document.createElement('div');
-  sfondo.className = 'pannello-sfondo pannello-dialogo avviso-aggiornamento'; // niente "pannello-aperto": non è nella pila dei pannelli
+  sfondo.className = 'pannello-sfondo pannello-dialogo avviso-app'; // niente "pannello-aperto": non è nella pila dei pannelli
   const titolo = 'Aggiornamento disponibile';
   const testo = versione
     ? `È pronta la versione ${versione} di Spese 2.0. Vuoi aggiornare ora? I tuoi dati restano dove sono.`
