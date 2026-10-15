@@ -36,6 +36,27 @@ export function ordinaPerUso(categorie, movimenti, oggi) { // eslint-disable-lin
   return ordinaManuale(categorie).sort((a, b) => conteggio(b) - conteggio(a)); // sort stabile: pari merito = ordine manuale
 }
 
+/**
+ * Totali per categoria dei movimenti di un tipo ("spesa" o "entrata"): i trasferimenti non contano.
+ * Restituisce { righe: [{ categoriaId, totale, conteggio, percentuale }], totale, conteggio } con le righe
+ * dalla categoria con più importo; a parità, più movimenti.
+ */
+export function totaliPerCategoria(movimenti, tipo) {
+  const perCategoria = new Map();
+  for (const m of movimenti) {
+    if (m.tipo !== tipo || !m.categoriaId) continue;
+    const voce = perCategoria.get(m.categoriaId) ?? { categoriaId: m.categoriaId, totale: 0, conteggio: 0 };
+    voce.totale += m.importo;
+    voce.conteggio += 1;
+    perCategoria.set(m.categoriaId, voce);
+  }
+  const righe = [...perCategoria.values()]
+    .sort((a, b) => b.totale - a.totale || b.conteggio - a.conteggio || a.categoriaId.localeCompare(b.categoriaId));
+  const totale = righe.reduce((somma, r) => somma + r.totale, 0);
+  const conteggio = righe.reduce((somma, r) => somma + r.conteggio, 0);
+  return { righe: righe.map((r) => ({ ...r, percentuale: totale ? (r.totale / totale) * 100 : 0 })), totale, conteggio };
+}
+
 /** Categorie di un tipo, nell'ordine scelto nelle impostazioni, senza quelle archiviate. */
 export function categoriePerInserimento(tutte, tipo, movimentiRecenti, oggi, modo) {
   const attive = tutte.filter((c) => c.tipo === tipo && !c.archiviata);

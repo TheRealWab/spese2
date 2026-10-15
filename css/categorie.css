@@ -1,0 +1,88 @@
+/* Area Categorie e dettaglio di una categoria. */
+
+.vista-categorie { display: grid; gap: var(--sp-3); touch-action: pan-y; }
+.ct-tipo { margin-bottom: var(--sp-1); }
+.sel-modi { margin-bottom: var(--sp-3); }
+.mese-testata .btn-icona:disabled { opacity: 0.3; }
+
+.ct-totale .ind-valore { font-size: var(--t-hero); }
+
+/* ---- Elenco categorie ---- */
+.lista-cat { overflow: hidden; }
+.riga-cat {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  min-height: 68px;
+  padding: var(--sp-3) var(--sp-4);
+  text-align: left;
+  transition: background var(--dur-1);
+}
+.riga-cat + .riga-cat { border-top: 1px solid var(--bordo); }
+.riga-cat:active { background: var(--scheda-2); }
+.ct-testo { display: grid; flex: 1; gap: 2px; min-width: 0; }
+.ct-nome { overflow: hidden; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.ct-sotto { font-size: var(--t-s); color: var(--testo-2); }
+.ct-importo { font-weight: 650; white-space: nowrap; }
+.ct-barra { height: 6px; margin-top: 4px; overflow: hidden; border-radius: var(--r-pieno); background: var(--scheda-2); }
+.ct-barra-riempi {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--c);
+  transition: width var(--dur-3) var(--ease);
+  transition-delay: calc(var(--i, 0) * 40ms);
+}
+.ct-barra-riempi.piena { width: var(--l); }
+
+/* ---- Dettaglio ---- */
+.ct-hero { display: flex; align-items: center; gap: var(--sp-4); padding: var(--sp-5); }
+.ct-hero-testo { display: grid; gap: 2px; min-width: 0; }
+.ct-hero-valore { font-size: var(--t-xl); line-height: 1.15; }
+
+.ct-note { display: grid; gap: var(--sp-3); padding: var(--sp-4); }
+.ct-note-titolo { font-size: var(--t-s); font-weight: 650; color: var(--testo-2); }
+.ct-note-aiuto { font-size: var(--t-xs); color: var(--testo-3); }
+.ct-suggerimento { padding: 0 var(--sp-1); font-size: var(--t-s); }
+
+.nota-barra { display: flex; gap: 2px; height: 14px; overflow: hidden; border-radius: var(--r-pieno); }
+.nota-seg { min-width: 6px; background: color-mix(in srgb, var(--c) calc(var(--q, 100) * 1%), var(--scheda)); }
+.nota-seg-neutro { background: var(--scheda-3); }
+.nota-seg-altre { background: color-mix(in srgb, var(--testo-3) 55%, var(--scheda)); }
+.nota-punto { flex: none; width: 12px; height: 12px; border-radius: 50%; background: color-mix(in srgb, var(--c) calc(var(--q, 100) * 1%), var(--scheda)); }
+.nota-punto.nota-seg-neutro { background: var(--scheda-3); }
+.nota-punto.nota-seg-altre { background: color-mix(in srgb, var(--testo-3) 55%, var(--scheda)); }
+
+.nota-elenco { display: grid; margin-inline: calc(var(--sp-2) * -1); }
+.riga-nota {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: "punto nome importo" ". dati importo";
+  align-items: center;
+  column-gap: var(--sp-3);
+  min-height: 52px;
+  padding: var(--sp-2);
+  border-radius: var(--r-m);
+  text-align: left;
+  transition: background var(--dur-1);
+}
+.riga-nota:active { background: var(--scheda-2); }
+.riga-nota.attiva { background: var(--accento-tenue); }
+.riga-nota .nota-punto { grid-area: punto; }
+.nota-nome { grid-area: nome; overflow: hidden; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.nota-dati { grid-area: dati; font-size: var(--t-s); color: var(--testo-2); }
+.nota-importo { grid-area: importo; font-weight: 650; white-space: nowrap; }
+
+.ct-filtro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);
+  border-radius: var(--r-m);
+  background: var(--accento-tenue);
+  color: var(--accento-forte);
+  font-size: var(--t-s);
+}

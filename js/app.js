@@ -14,6 +14,7 @@ import { inizializzaBlocco, controllaBlocco } from './components/blocco.js';
 import { VERSIONE_APP } from './versione.js';
 import * as mese from './views/mese.js';
 import * as altro from './views/altro.js';
+import * as categorie from './views/categorie.js';
 import { creaVistaSegnaposto } from './views/segnaposto.js';
 
 const grafici = creaVistaSegnaposto({
@@ -29,13 +30,6 @@ const patrimonio = creaVistaSegnaposto({
   colore: 'smeraldo',
   domanda: 'Quanto vale tutto, e come cresce?',
   punti: ['Saldo di ogni conto', 'Investimenti: versato, valore e guadagno', 'Andamento del patrimonio nel tempo'],
-});
-const categorie = creaVistaSegnaposto({
-  titolo: 'Categorie',
-  icona: 'layout-grid',
-  colore: 'arancio',
-  domanda: 'Su cosa spendi, nel dettaglio?',
-  punti: ['Totale per categoria nel periodo', 'Scomposizione per nota (es. Panificio e Supermercato)', 'Icone, colori e ordine a tuo piacere'],
 });
 
 const ROTTE = [

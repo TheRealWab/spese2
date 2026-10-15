@@ -6,7 +6,7 @@
 
 // Va tenuta uguale a VERSIONE_APP in js/versione.js (lo verifica un test).
 // Cambiarla a ogni rilascio: cambia il nome della cache e i file vengono riscaricati.
-const VERSIONE = '1.3.1';
+const VERSIONE = '1.4.0';
 const PREFISSO_CACHE = 'spese2-';
 const CACHE = `${PREFISSO_CACHE}${VERSIONE}`;
 
@@ -23,10 +23,12 @@ const FILE = [
   'css/importa.css',
   'css/viste.css',
   'css/blocco.css',
+  'css/categorie.css',
   'js/app.js',
   'js/db.js',
   'js/versione.js',
   'js/util/animazione.js',
+  'js/util/swipe.js',
   'js/util/scarica.js',
   'js/util/date.js',
   'js/util/dom.js',
@@ -46,19 +48,24 @@ const FILE = [
   'js/model/impostazioni.js',
   'js/model/impronta.js',
   'js/model/movimenti.js',
+  'js/model/note.js',
   'js/model/palette.js',
+  'js/model/periodi.js',
   'js/model/seed.js',
   'js/model/sicurezza.js',
   'js/views/altro.js',
+  'js/views/categorie.js',
   'js/views/mese.js',
   'js/views/segnaposto.js',
   'js/components/importa-guidata.js',
   'js/components/backup-esporta.js',
   'js/components/blocco.js',
   'js/components/backup-ripristina.js',
+  'js/components/dettaglio-categoria.js',
   'js/components/inserimento.js',
   'js/components/pannello.js',
   'js/components/riga-movimento.js',
+  'js/components/selettore-periodo.js',
   'js/components/selettori.js',
   'js/components/sicurezza-ui.js',
   'js/components/tastierino.js',
