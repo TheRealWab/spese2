@@ -11,6 +11,7 @@ export const PREDEFINITE = {
   contoPredefinito: 'conto-principale',
   ordineCategorieInserimento: 'frequenza', // "frequenza" | "manuale"
   ultimoPeriodoGrafici: null,
+  nascondiImportiPatrimonio: false, // occhio nell'area Patrimonio: copre gli importi con dei pallini
   ultimoBackup: null,
   sicurezza: { attiva: false },
 };

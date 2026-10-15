@@ -10,6 +10,7 @@ import { dataValida, aggiungiGiorni } from '../util/date.js';
 import { nuovoId } from '../util/id.js';
 import { normalizzaNota } from './calcoli.js';
 import { coloreVicino } from './palette.js';
+import { creaStoriaConto } from './patrimonio.js';
 
 export const ORIGINE = 'le-mie-spese';
 
@@ -315,15 +316,5 @@ export function converti(analisi, scelte, contesto) {
  * (il saldo iniziale vale a fine giornata di quella data). Entrate +, spese −, trasferimenti − in uscita e + in arrivo.
  */
 export function saldoCalcolato(conto, movimenti) {
-  let saldo = conto.saldoIniziale ?? 0;
-  for (const m of movimenti) {
-    if (m.data <= conto.dataSaldoIniziale) continue;
-    if (m.tipo === 'entrata' && m.contoId === conto.id) saldo += m.importo;
-    else if (m.tipo === 'spesa' && m.contoId === conto.id) saldo -= m.importo;
-    else if (m.tipo === 'trasferimento') {
-      if (m.contoId === conto.id) saldo -= m.importo;
-      if (m.contoDestinazioneId === conto.id) saldo += m.importo;
-    }
-  }
-  return saldo;
+  return creaStoriaConto(conto, movimenti).versatoAl('9999-12-31');
 }

@@ -38,6 +38,15 @@ export function percentuale(valore) {
   return `${fmtNumero.format(Math.round(valore))}%`;
 }
 
+const fmtPercentualeDecimale = new Intl.NumberFormat('it-IT', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+/** Con un decimale e il segno: "+4,2%" / "−1,5%" (meno vero, U+2212); "0,0%" senza segno. */
+export function percentualeConSegno(valore) {
+  const arrotondato = Math.round(valore * 10) / 10;
+  if (arrotondato === 0) return '0,0%';
+  return (arrotondato > 0 ? '+' : '−') + fmtPercentualeDecimale.format(Math.abs(arrotondato)) + '%';
+}
+
 // ---- Cifre digitate sul tastierino ----
 
 /** "1234,5" → "1.234,5" (separatore delle migliaia mentre si digita). */
@@ -63,6 +72,40 @@ export function centesimiInDigitato(centesimi) {
   return `${intero},${String(resto).padStart(2, '0').replace(/0$/, '')}`;
 }
 
+/**
+ * Legge un importo scritto a mano in un campo di testo ("1.234,56", "1234,5", "12.50", "-30", "€ 99") e lo
+ * restituisce in centesimi; null se non è un importo valido. La virgola è il separatore decimale; un punto seguito
+ * da esattamente tre cifre (e senza virgola) è un separatore delle migliaia, altrimenti è un decimale.
+ */
+export function leggiImporto(testo) {
+  let t = String(testo ?? '').replace(/[€\s]/g, '').replace('−', '-');
+  if (!t) return null;
+  let segno = 1;
+  if (t[0] === '-' || t[0] === '+') { if (t[0] === '-') segno = -1; t = t.slice(1); }
+  if (!t || !/^[\d.,]+$/.test(t)) return null;
+  const ultimaVirgola = t.lastIndexOf(',');
+  const ultimoPunto = t.lastIndexOf('.');
+  const sep = Math.max(ultimaVirgola, ultimoPunto);
+  let intero = t;
+  let decimali = '';
+  if (sep !== -1) {
+    const dopo = t.slice(sep + 1);
+    if (ultimaVirgola === -1 && /^\d{3}$/.test(dopo)) {
+      intero = t.replace(/\./g, ''); // solo punti, l'ultimo seguito da tre cifre: migliaia
+    } else {
+      if (!/^\d{0,2}$/.test(dopo)) return null;
+      const prima = t.slice(0, sep);
+      // Prima della virgola ci possono essere solo punti (migliaia); prima di un punto decimale, nessun separatore.
+      if (t[sep] === ',' ? prima.includes(',') : /[.,]/.test(prima)) return null;
+      intero = prima.replace(/\./g, '');
+      decimali = dopo;
+    }
+  }
+  if (intero.length > 12 || (intero && !/^\d+$/.test(intero))) return null;
+  if (!intero && !decimali) return null;
+  return segno * (Number(intero || '0') * 100 + Number(decimali.padEnd(2, '0') || '0'));
+}
+
 // ---- Date (UTC per evitare scarti di fuso: le date sono "giorni", non istanti) ----
 
 const opzioniUtc = { timeZone: 'UTC' };
@@ -76,6 +119,11 @@ const comeData = (iso) => {
   return new Date(Date.UTC(a, m - 1, g));
 };
 const maiuscola = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+const fmtBreveAnno = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'short', year: 'numeric', ...opzioniUtc });
+
+/** "14 ott 2026" */
+export const dataBreve = (iso) => fmtBreveAnno.format(comeData(iso));
 
 /** "14 ottobre 2026" */
 export const dataLunga = (iso) => fmtLunga.format(comeData(iso));

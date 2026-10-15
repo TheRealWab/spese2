@@ -7,8 +7,11 @@ import { categoriaPerId, contoPerId } from '../model/catalogo.js';
 
 const MENO = '−';
 
-/** HTML di una riga. È un <button>: un tocco apre la modifica. */
-export function htmlRigaMovimento(m, { evidenzia = false } = {}) {
+/**
+ * HTML di una riga. È un <button>: un tocco apre la modifica.
+ * `formato` trasforma i centesimi in testo (di solito `euro`; nel Patrimonio può nascondere la cifra).
+ */
+export function htmlRigaMovimento(m, { evidenzia = false, formato = euro } = {}) {
   const conto = contoPerId(m.contoId);
   let cerchio;
   let titolo;
@@ -21,7 +24,7 @@ export function htmlRigaMovimento(m, { evidenzia = false } = {}) {
     cerchio = `<span class="cerchio cerchio-neutro" style="--dim:44px">${icona('arrow-left-right', 22)}</span>`;
     titolo = 'Trasferimento';
     dettaglio = `${esc(conto?.nome ?? '—')} → ${esc(destinazione?.nome ?? '—')}`;
-    importo = euro(m.importo);
+    importo = formato(m.importo);
     classeImporto = 'importo-trasferimento';
   } else {
     const categoria = categoriaPerId(m.categoriaId);
@@ -30,8 +33,8 @@ export function htmlRigaMovimento(m, { evidenzia = false } = {}) {
     const nota = m.nota ? `<span class="mov-nota">${esc(m.nota)}</span>` : '';
     const nomeConto = `<span class="mov-conto">${esc(conto?.nome ?? '—')}</span>`;
     dettaglio = nota ? `${nota} · ${nomeConto}` : nomeConto;
-    if (m.tipo === 'entrata') { importo = `+${euro(m.importo)}`; classeImporto = 'importo-entrata'; }
-    else importo = `${MENO}${euro(m.importo)}`;
+    if (m.tipo === 'entrata') { importo = `+${formato(m.importo)}`; classeImporto = 'importo-entrata'; }
+    else importo = `${MENO}${formato(m.importo)}`;
   }
 
   return `

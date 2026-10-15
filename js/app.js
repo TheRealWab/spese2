@@ -16,6 +16,7 @@ import { VERSIONE_APP } from './versione.js';
 import * as mese from './views/mese.js';
 import * as altro from './views/altro.js';
 import * as categorie from './views/categorie.js';
+import * as patrimonio from './views/patrimonio.js';
 import { creaVistaSegnaposto } from './views/segnaposto.js';
 
 const grafici = creaVistaSegnaposto({
@@ -24,13 +25,6 @@ const grafici = creaVistaSegnaposto({
   colore: 'indaco',
   domanda: 'Dove sono finiti i soldi?',
   punti: ['Ciambella per categoria, con importi e percentuali', 'Confronto con il periodo precedente', 'Entrate, spese e risparmio nel tempo'],
-});
-const patrimonio = creaVistaSegnaposto({
-  titolo: 'Patrimonio',
-  icona: 'landmark',
-  colore: 'smeraldo',
-  domanda: 'Quanto vale tutto, e come cresce?',
-  punti: ['Saldo di ogni conto', 'Investimenti: versato, valore e guadagno', 'Andamento del patrimonio nel tempo'],
 });
 
 const ROTTE = [
@@ -306,6 +300,7 @@ async function avvia() {
   document.addEventListener('spese2:movimenti', (e) => istanza?.aggiorna?.({ evento: 'movimenti', ...e.detail }));
   document.addEventListener('spese2:impostazioni', (e) => istanza?.aggiorna?.({ evento: 'impostazioni', ...e.detail }));
   document.addEventListener('spese2:categorie', (e) => istanza?.aggiorna?.({ evento: 'categorie', ...e.detail }));
+  document.addEventListener('spese2:conti', (e) => istanza?.aggiorna?.({ evento: 'conti', ...e.detail }));
   // Tornando all'app dopo ore (o a mezzanotte passata) "Oggi" e i totali vanno riletti.
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') istanza?.aggiorna?.({ evento: 'visibile' });

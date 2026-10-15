@@ -1,0 +1,98 @@
+/* Area Patrimonio: cifra protagonista, grafico dell'andamento, conti e investimenti. */
+
+.pt-testata { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-3); }
+.pt-testata .vista-titolo { margin-bottom: 0; }
+.pt-occhio { color: var(--testo-2); }
+
+.pt-su { color: var(--verde); }
+.pt-giu { color: var(--rosso); }
+
+.pt-hero .ind-valore { font-size: var(--t-hero); }
+.pt-variazione { display: flex; align-items: center; gap: 6px; font-size: var(--t-s); font-weight: 600; color: var(--testo-2); }
+.pt-variazione.pt-su { color: var(--verde); }
+.pt-variazione.pt-giu { color: var(--rosso); }
+
+/* ---- Grafico ---- */
+.pt-grafico { display: grid; gap: var(--sp-3); padding: var(--sp-4); }
+.pt-grafico .mese-testata { margin-bottom: var(--sp-2); }
+.pt-nota-grafico { min-height: 1.2em; font-size: var(--t-s); font-weight: 600; color: var(--testo-2); }
+.pt-nota-grafico.pt-su { color: var(--verde); }
+.pt-nota-grafico.pt-giu { color: var(--rosso); }
+
+.gr { color: var(--accento); }
+.gr-area {
+  position: relative;
+  height: 170px;
+  touch-action: pan-y; /* si scorre la pagina in verticale; in orizzontale il dito legge i punti */
+  -webkit-user-select: none;
+  user-select: none;
+}
+.gr-area svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.gr-linea { stroke: currentColor; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.gr-estremo {
+  position: absolute;
+  left: 0;
+  padding: 1px 6px;
+  border-radius: var(--r-pieno);
+  background: var(--scheda);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--testo-3);
+  pointer-events: none;
+}
+.gr-alto { top: 0; }
+.gr-basso { bottom: 0; }
+.gr-guida { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--testo-3); opacity: 0.6; pointer-events: none; }
+.gr-pallino {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 3px solid var(--scheda);
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: var(--ombra-alta);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.gr-tip {
+  position: absolute;
+  top: 22px; /* dentro il grafico, sotto l'etichetta del valore massimo */
+  display: grid;
+  gap: 0;
+  padding: 6px 10px;
+  border-radius: var(--r-m);
+  background: var(--testo);
+  color: var(--scheda);
+  font-size: var(--t-xs);
+  text-align: center;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.gr-tip strong { font-size: var(--t-s); }
+.gr-date { display: flex; justify-content: space-between; font-size: var(--t-xs); color: var(--testo-3); }
+.gr-vuoto { padding: var(--sp-6) var(--sp-3); text-align: center; color: var(--testo-3); }
+
+/* ---- Conti e investimenti ---- */
+.pt-saldo { font-weight: 650; white-space: nowrap; }
+
+.pt-inv { display: grid; gap: var(--sp-3); padding: var(--sp-4); }
+.pt-inv + .pt-inv { margin-top: var(--sp-3); }
+.pt-inv-testa { display: flex; align-items: center; gap: var(--sp-3); width: 100%; text-align: left; }
+.pt-inv-dati { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-2); margin: 0; }
+.pt-inv-dati > div { display: grid; gap: 2px; padding: var(--sp-2) var(--sp-3); border-radius: var(--r-m); background: var(--scheda-2); min-width: 0; }
+.pt-inv-dati dt { font-size: var(--t-xs); font-weight: 600; color: var(--testo-2); }
+.pt-inv-dati dd { display: grid; margin: 0; font-size: var(--t-s); font-weight: 700; white-space: nowrap; }
+.pt-perc { font-size: var(--t-xs); font-weight: 650; }
+.pt-inv-piede { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); flex-wrap: wrap; }
+.pt-aggiornato { display: inline-flex; align-items: center; gap: 4px; font-size: var(--t-xs); color: var(--testo-3); }
+.pt-aggiornato.vecchio { color: var(--arancio); font-weight: 600; }
+.pulsante-piccolo { min-height: 40px; padding: 0 var(--sp-4); font-size: var(--t-s); }
+.pulsante-pericolo-tenue { background: var(--rosso-tenue); color: var(--rosso); }
+
+.pt-azioni { overflow: hidden; }
+.pt-titolo-movimenti { margin: var(--sp-2) 0 calc(var(--sp-1) * -1); padding: 0 var(--sp-2); }
+.pt-anteprima { min-height: 1.3em; font-size: var(--t-s); color: var(--testo-2); }
+
+/* ---- Editor del conto ---- */
+.ec-saldo { display: grid; gap: var(--sp-3); padding: var(--sp-4); }

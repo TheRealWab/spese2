@@ -6,7 +6,7 @@
 
 // Va tenuta uguale a VERSIONE_APP in js/versione.js (lo verifica un test).
 // Cambiarla a ogni rilascio: cambia il nome della cache e i file vengono riscaricati.
-const VERSIONE = '1.6.0';
+const VERSIONE = '1.7.0';
 const PREFISSO_CACHE = 'spese2-';
 const CACHE = `${PREFISSO_CACHE}${VERSIONE}`;
 
@@ -24,6 +24,7 @@ const FILE = [
   'css/viste.css',
   'css/blocco.css',
   'css/categorie.css',
+  'css/patrimonio.css',
   'js/app.js',
   'js/db.js',
   'js/versione.js',
@@ -33,6 +34,7 @@ const FILE = [
   'js/util/date.js',
   'js/util/dom.js',
   'js/util/formato.js',
+  'js/util/importi-privati.js',
   'js/util/icone.js',
   'js/util/id.js',
   'js/model/azzera.js',
@@ -46,6 +48,7 @@ const FILE = [
   'js/model/importa-vecchia.js',
   'js/model/importazione.js',
   'js/model/blocco.js',
+  'js/model/conti-db.js',
   'js/model/file-backup.js',
   'js/model/impostazioni.js',
   'js/model/impronta.js',
@@ -53,6 +56,7 @@ const FILE = [
   'js/model/note.js',
   'js/model/note-db.js',
   'js/model/palette.js',
+  'js/model/patrimonio.js',
   'js/model/parole-icone.js',
   'js/model/periodi.js',
   'js/model/ricerca-icone.js',
@@ -61,16 +65,22 @@ const FILE = [
   'js/views/altro.js',
   'js/views/categorie.js',
   'js/views/mese.js',
+  'js/views/patrimonio.js',
   'js/views/segnaposto.js',
   'js/components/aggiornamento.js',
   'js/components/gestione-note.js',
   'js/components/importa-guidata.js',
+  'js/components/aggiorna-valore.js',
   'js/components/backup-esporta.js',
   'js/components/blocco.js',
   'js/components/backup-ripristina.js',
   'js/components/dettaglio-categoria.js',
+  'js/components/dettaglio-conto.js',
   'js/components/editor-categoria.js',
+  'js/components/editor-conto.js',
   'js/components/gestione-categorie.js',
+  'js/components/gestione-conti.js',
+  'js/components/grafico-andamento.js',
   'js/components/inserimento.js',
   'js/components/pannello.js',
   'js/components/riga-movimento.js',
