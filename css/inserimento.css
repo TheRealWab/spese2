@@ -129,9 +129,9 @@
 
 /* ---- Campi secondari ---- */
 .ins-secondario { display: grid; flex: none; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3) 0; }
-.ins-riga-a { display: flex; gap: var(--sp-2); }
-.chip-conto { flex: 1 1 auto; min-width: 0; }
-.chip-data { flex: none; }
+.ins-riga-a { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.chip-conto { flex: 1 1 96px; min-width: 96px; } /* un nome lungo si accorcia, ma non spinge fuori gli altri chip */
+.chip-data, .chip-ricorrente { flex: none; }
 .chip-testo { overflow: hidden; text-overflow: ellipsis; }
 .ins-riga-b {
   display: flex;

@@ -215,7 +215,7 @@ export async function apriInserimento({ movimento = null, iniziale = {} } = {}) 
         ? etichettaGiorno(stato.data, oggi) : dataLunga(stato.data);
       // "Rendi ricorrente" solo per un movimento già salvato e non generato da un ricorrente.
       const chipRicorrente = modifica && !movimento.ricorrenteId ? `
-        <button type="button" class="chip" data-az="ricorrente" aria-label="Rendi ricorrente questo movimento">
+        <button type="button" class="chip chip-ricorrente" data-az="ricorrente" aria-label="Rendi ricorrente questo movimento">
           ${icona('repeat', 16)}<span class="chip-testo">Rendi ricorrente</span>
         </button>` : '';
       r('riga-a').innerHTML = `${chipConto}
