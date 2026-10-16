@@ -7,7 +7,7 @@ import { scegliIcona } from './selettore-icona.js';
 import { mostraToast } from './toast.js';
 import { esc } from '../util/dom.js';
 import { icona, cerchioIcona } from '../util/icone.js';
-import { oggiIso } from '../util/date.js';
+import { oggiIso, aggiungiGiorni, dataValida } from '../util/date.js';
 import { euro, leggiImporto, centesimiInDigitato } from '../util/formato.js';
 import { tutti } from '../db.js';
 import { impostazioni } from '../model/impostazioni.js';
@@ -16,7 +16,7 @@ import { COLORI_CATEGORIA } from '../model/palette.js';
 import {
   TIPI_CONTO, ETICHETTA_TIPO_CONTO, LUNGHEZZA_MAX_NOME_CONTO, ICONA_PREDEFINITA_CONTO, coloreContoSuggerito, puoArchiviareConto,
 } from '../model/conti.js';
-import { creaStoriaConto } from '../model/patrimonio.js';
+import { creaStoriaConto, movimentiEsclusi } from '../model/patrimonio.js';
 import { ErroreConto, creaConto, aggiornaConto, archiviaConto, tuttiIValori } from '../model/conti-db.js';
 
 const ETICHETTA_COLORE = {
@@ -37,9 +37,11 @@ export function apriEditorConto({ contoId = null } = {}) {
     icona: esistente?.icona ?? ICONA_PREDEFINITA_CONTO.conto,
     colore: esistente?.colore ?? coloreContoSuggerito(tuttiIContiInMemoria()),
     saldo: esistente ? centesimiInDigitato(esistente.saldoIniziale) : '',
-    data: esistente?.dataSaldoIniziale ?? oggi,
+    // Un conto nuovo parte da ieri: così anche i movimenti di oggi (per esempio un trasferimento verso questo conto) si sommano al saldo.
+    data: esistente?.dataSaldoIniziale ?? aggiungiGiorni(oggi, -1),
     errore: '',
     salvando: false,
+    movimentiConto: [], // i movimenti del conto (per avvisare di quelli che il saldo iniziale non conta)
   };
   let radice = null;
 
@@ -52,12 +54,13 @@ export function apriEditorConto({ contoId = null } = {}) {
       el.addEventListener('input', (e) => {
         if (e.target.id === 'ec-nome') stato.nome = e.target.value;
         else if (e.target.id === 'ec-saldo') stato.saldo = e.target.value;
-        else if (e.target.id === 'ec-data') stato.data = e.target.value;
+        else if (e.target.id === 'ec-data') { stato.data = e.target.value; aggiornaAvvisoData(); }
         else return;
         if (stato.errore) segnalaErrore('');
       });
       el.addEventListener('submit', (e) => { e.preventDefault(); salvaTutto(c); });
       disegna();
+      if (esistente) tutti('movimenti').then((movimenti) => { stato.movimentiConto = movimenti.filter((m) => m.contoId === esistente.id || m.contoDestinazioneId === esistente.id); aggiornaAvvisoData(); });
     },
   });
   return ctrl.chiuso;
@@ -106,10 +109,11 @@ export function apriEditorConto({ contoId = null } = {}) {
                 <input id="ec-saldo" class="campo-testo" type="text" inputmode="decimal" placeholder="0" value="${esc(stato.saldo)}">
               </div>
               <div class="campo">
-                <label for="ec-data">Alla data</label>
+                <label for="ec-data">Saldo a fine giornata del</label>
                 <input id="ec-data" class="campo-data" type="date" value="${esc(stato.data)}">
               </div>
-              <p class="nota-fondo">I movimenti registrati dopo questa data si sommano al saldo iniziale. Può essere negativo (carta di credito, scoperto).</p>
+              <p class="nota-fondo">I movimenti dei giorni dopo questa data si sommano al saldo iniziale; quelli di questo giorno o precedenti no, perché il saldo li comprende già.${nuovo ? ' Per un conto nuovo la data è ieri, così contano anche i movimenti di oggi.' : ''} Il saldo può essere negativo (carta di credito, scoperto).</p>
+              <p class="flusso-errore" role="status" data-r="avviso-data" hidden>${icona('triangle-alert', 18)}<span></span></p>
             </div>
           </section>
 
@@ -137,6 +141,21 @@ export function apriEditorConto({ contoId = null } = {}) {
           <button type="button" class="pulsante pulsante-grande" data-az="salva" ${stato.salvando ? 'disabled' : ''}>${nuovo ? 'Crea il conto' : 'Salva le modifiche'}</button>
         </footer>
       </div>`;
+    aggiornaAvvisoData();
+  }
+
+  /** Avvisa se la data scelta lascia fuori dal saldo dei movimenti già registrati su questo conto. */
+  function aggiornaAvvisoData() {
+    const campo = radice?.querySelector('[data-r="avviso-data"]');
+    if (!campo) return;
+    const esclusi = dataValida(stato.data) ? movimentiEsclusi({ id: esistente?.id, dataSaldoIniziale: stato.data }, stato.movimentiConto) : [];
+    campo.hidden = esclusi.length === 0;
+    if (esclusi.length) {
+      const frase = esclusi.length === 1
+        ? 'C\'è 1 movimento di questo conto che non viene sommato al saldo, perché è del giorno del saldo iniziale o precedente.'
+        : `Ci sono ${esclusi.length} movimenti di questo conto che non vengono sommati al saldo, perché sono del giorno del saldo iniziale o precedenti.`;
+      campo.querySelector('span').textContent = `${frase} Per contarli scegli una data precedente al più vecchio.`;
+    }
   }
 
   function htmlArchivia(corrente) {

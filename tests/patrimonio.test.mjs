@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  effettoMovimento, ripartizioneInvestito, creaStoriaConto, creaStorie, patrimonioAl, riepilogoInvestimento, variazioneRispettoAMeseFa,
+  effettoMovimento, movimentiEsclusi, ripartizioneInvestito, creaStoriaConto, creaStorie, patrimonioAl, riepilogoInvestimento, variazioneRispettoAMeseFa,
   dateCampione, serieAndamento, primaDataConDati, intervalloGrafico, etichettaAggiornamento, movimentiDelConto,
 } from '../js/model/patrimonio.js';
 import {
@@ -255,4 +255,37 @@ test('ripartizioneInvestito: senza senso (zero, scoperto) non si mostra; i conti
   assert.equal(ripartizioneInvestito(creaStorie([conto('a', 'conto', -5000), conto('i', 'investimenti', 100000)], []), '2026-03-01'), null);
   const soloAttivi = ripartizioneInvestito(creaStorie([conto('a', 'conto', 1000), conto('i', 'investimenti', 1000, '2026-01-01', { archiviato: true })], []), '2026-03-01');
   assert.deepEqual([soloAttivi.percentualeInvestito, soloAttivi.percentualeNonInvestito], [0, 100]);
+});
+
+// ---- Conto nuovo e trasferimenti (segnalato da un caso reale: il saldo del conto appena creato non cambiava) ----
+
+test('movimentiEsclusi: quelli del giorno del saldo iniziale o precedenti non entrano nel saldo', () => {
+  const c = conto('n', 'conto', 119, '2026-10-16');
+  const movimenti = [
+    giro('p', 'n', 10000, '2026-10-16'), // lo stesso giorno: escluso
+    giro('p', 'n', 5000, '2026-10-10'), // prima: escluso
+    giro('p', 'n', 7000, '2026-10-17'), // dopo: conta
+    spesa('p', 300, '2026-10-16'), // non riguarda questo conto
+  ];
+  assert.deepEqual(movimentiEsclusi(c, movimenti).map((m) => m.importo), [10000, 5000]);
+  assert.deepEqual(movimentiEsclusi({ ...c, dataSaldoIniziale: '2026-10-15' }, movimenti).map((m) => m.importo), [5000]);
+});
+
+test('un trasferimento tra due conti non cambia il patrimonio, se il saldo iniziale di entrambi è prima', () => {
+  const oggi = '2026-10-16';
+  const conti = [conto('p', 'conto', 100000, '2026-01-01'), conto('n', 'conto', 119, '2026-10-15')]; // il nuovo parte da ieri
+  const prima = patrimonioAl(creaStorie(conti, []), oggi);
+  const storie = creaStorie(conti, [giro('p', 'n', 10000, oggi)]);
+  assert.equal(patrimonioAl(storie, oggi), prima);
+  assert.equal(storie.get('n').saldoAl(oggi), 10119);
+  assert.equal(storie.get('p').saldoAl(oggi), 90000);
+});
+
+test('il caso che confondeva: un conto con il saldo iniziale di oggi non conta il trasferimento di oggi (e va segnalato)', () => {
+  const oggi = '2026-10-16';
+  const conti = [conto('p', 'conto', 100000, '2026-01-01'), conto('n', 'conto', 119, oggi)];
+  const movimento = giro('p', 'n', 10000, oggi);
+  const storie = creaStorie(conti, [movimento]);
+  assert.equal(storie.get('n').saldoAl(oggi), 119); // non conta
+  assert.equal(movimentiEsclusi(conti[1], [movimento]).length, 1); // e l'app lo sa, quindi avvisa
 });

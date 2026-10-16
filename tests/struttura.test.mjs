@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
 
 import { CATEGORIE_INIZIALI, CONTI_INIZIALI } from '../js/model/seed.js';
 import { PREDEFINITE } from '../js/model/impostazioni.js';
@@ -117,4 +118,21 @@ test('.gitignore esclude la cartella privata e i backup', () => {
   const gitignore = leggi('.gitignore');
   assert.match(gitignore, /^_privato\/$/m);
   assert.match(gitignore, /^spese-backup-\*\.json$/m);
+});
+
+test('ogni file JavaScript dell\'app ha una sintassi valida (un errore qui bloccherebbe l\'intera app)', () => {
+  const elenco = [];
+  const visita = (cartella) => {
+    for (const nome of readdirSync(cartella)) {
+      const percorso = join(cartella, nome);
+      if (statSync(percorso).isDirectory()) visita(percorso);
+      else if (nome.endsWith('.js')) elenco.push(percorso);
+    }
+  };
+  visita(join(radice, 'js'));
+  elenco.push(join(radice, 'sw.js'));
+  for (const file of elenco) {
+    const esito = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
+    assert.equal(esito.status, 0, `${relative(radice, file)}: ${esito.stderr.split('\n').slice(0, 4).join(' | ')}`);
+  }
 });

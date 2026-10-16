@@ -5,6 +5,7 @@ import { apriPannello } from './pannello.js';
 import { creaTastierino, applicaTasto } from './tastierino.js';
 import { scegliConto, scegliData, conferma } from './selettori.js';
 import { apriEditorRicorrente } from './editor-ricorrente.js';
+import { movimentiEsclusi } from '../model/patrimonio.js';
 import { mostraToast } from './toast.js';
 import { esc, $, animaClasse, vibra, attendi, movimentoRidotto } from '../util/dom.js';
 import { icona, cerchioIcona } from '../util/icone.js';
@@ -365,12 +366,24 @@ export async function apriInserimento({ movimento = null, iniziale = {} } = {}) 
           detail: { id: salvato.id, data: salvato.data, azione: modifica ? 'modificato' : 'creato' },
         }));
         c.chiudi(salvato);
+        avvisaSeNonContato(salvato);
       } catch (errore2) {
         console.error(errore2);
         stato.salvando = false;
         r('salva').disabled = false;
         mostraToast('Non sono riuscito a salvare. Riprova.');
       }
+    }
+
+    /** Se il movimento è del giorno del saldo iniziale di un conto (o precedente), quel conto non lo somma: lo si dice. */
+    function avvisaSeNonContato(salvato) {
+      const nomi = [salvato.contoId, salvato.contoDestinazioneId]
+        .filter(Boolean)
+        .map((id) => contoPerId(id))
+        .filter((conto) => conto && movimentiEsclusi(conto, [salvato]).length)
+        .map((conto) => `«${conto.nome}»`);
+      if (!nomi.length) return;
+      mostraToast(`Attenzione: il saldo iniziale di ${nomi.join(' e ')} è alla data di questo movimento o dopo, quindi non lo conta. Puoi cambiare la data in Patrimonio → Gestisci conti.`, { durata: 9000 });
     }
 
     /** Apre l'editor dei ricorrenti precompilato con questo movimento (come lo si vede ora nel modulo). */

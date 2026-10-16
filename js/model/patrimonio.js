@@ -68,6 +68,15 @@ export function creaStoriaConto(conto, movimenti, valori = []) {
   return { conto, versatoAl, ultimoValoreAl, saldoAl };
 }
 
+/**
+ * I movimenti che riguardano il conto ma NON entrano nel suo saldo, perché sono del giorno del saldo iniziale o prima
+ * (il saldo iniziale vale a fine giornata di quella data e li comprende già). Serve ad avvisare l'utente: un movimento
+ * "perso" così, per esempio un trasferimento verso un conto appena creato, fa sembrare sbagliato il patrimonio.
+ */
+export function movimentiEsclusi(conto, movimenti) {
+  return movimenti.filter((m) => effettoMovimento(m, conto.id) !== 0 && m.data <= conto.dataSaldoIniziale);
+}
+
 /** Le storie di tutti i conti, per id. */
 export function creaStorie(conti, movimenti, valori = []) {
   return new Map(conti.map((c) => [c.id, creaStoriaConto(c, movimenti, valori)]));
