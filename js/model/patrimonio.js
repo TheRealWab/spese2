@@ -69,12 +69,13 @@ export function creaStoriaConto(conto, movimenti, valori = []) {
 }
 
 /**
- * I movimenti che riguardano il conto ma NON entrano nel suo saldo, perché sono del giorno del saldo iniziale o prima
- * (il saldo iniziale vale a fine giornata di quella data e li comprende già). Serve ad avvisare l'utente: un movimento
- * "perso" così, per esempio un trasferimento verso un conto appena creato, fa sembrare sbagliato il patrimonio.
+ * I movimenti registrati NELL'APP che riguardano il conto ma non entrano nel suo saldo, perché sono del giorno del saldo
+ * iniziale o precedenti (il saldo iniziale vale a fine giornata di quella data). Serve ad avvisare l'utente: un
+ * movimento "perso" così, per esempio un trasferimento verso un conto appena creato, fa sembrare sbagliato il patrimonio.
+ * Quelli importati dalla vecchia app (hanno `origineId`) non contano: sono già dentro il saldo iniziale, ed è giusto così.
  */
 export function movimentiEsclusi(conto, movimenti) {
-  return movimenti.filter((m) => effettoMovimento(m, conto.id) !== 0 && m.data <= conto.dataSaldoIniziale);
+  return movimenti.filter((m) => !m.origineId && effettoMovimento(m, conto.id) !== 0 && m.data <= conto.dataSaldoIniziale);
 }
 
 /** Le storie di tutti i conti, per id. */

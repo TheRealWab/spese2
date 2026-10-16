@@ -289,3 +289,11 @@ test('il caso che confondeva: un conto con il saldo iniziale di oggi non conta i
   assert.equal(storie.get('n').saldoAl(oggi), 119); // non conta
   assert.equal(movimentiEsclusi(conti[1], [movimento]).length, 1); // e l'app lo sa, quindi avvisa
 });
+
+test('movimentiEsclusi: quelli importati dalla vecchia app (origineId) sono già nel saldo iniziale e non si segnalano', () => {
+  const c = conto('p', 'conto', 500000, '2026-10-14');
+  const importato = { ...spesa('p', 1200, '2026-10-02'), origineId: 'vecchia-app:42' };
+  const dellApp = spesa('p', 800, '2026-10-14'); // registrato nell'app, ma del giorno del saldo: non conta e va segnalato
+  assert.deepEqual(movimentiEsclusi(c, [importato, dellApp]).map((m) => m.importo), [800]);
+  assert.deepEqual(movimentiEsclusi(c, [importato]), []);
+});

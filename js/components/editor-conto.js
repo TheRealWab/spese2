@@ -42,6 +42,7 @@ export function apriEditorConto({ contoId = null } = {}) {
     errore: '',
     salvando: false,
     movimentiConto: [], // i movimenti del conto (per avvisare di quelli che il saldo iniziale non conta)
+    valori: [], // i valori dell'investimento, per l'anteprima del saldo
   };
   let radice = null;
 
@@ -53,14 +54,20 @@ export function apriEditorConto({ contoId = null } = {}) {
       el.addEventListener('click', (e) => suTocco(e, c));
       el.addEventListener('input', (e) => {
         if (e.target.id === 'ec-nome') stato.nome = e.target.value;
-        else if (e.target.id === 'ec-saldo') stato.saldo = e.target.value;
-        else if (e.target.id === 'ec-data') { stato.data = e.target.value; aggiornaAvvisoData(); }
+        else if (e.target.id === 'ec-saldo') { stato.saldo = e.target.value; aggiornaAvvisi(); }
+        else if (e.target.id === 'ec-data') { stato.data = e.target.value; aggiornaAvvisi(); }
         else return;
         if (stato.errore) segnalaErrore('');
       });
       el.addEventListener('submit', (e) => { e.preventDefault(); salvaTutto(c); });
       disegna();
-      if (esistente) tutti('movimenti').then((movimenti) => { stato.movimentiConto = movimenti.filter((m) => m.contoId === esistente.id || m.contoDestinazioneId === esistente.id); aggiornaAvvisoData(); });
+      if (esistente) {
+        Promise.all([tutti('movimenti'), tuttiIValori()]).then(([movimenti, valori]) => {
+          stato.movimentiConto = movimenti.filter((m) => m.contoId === esistente.id || m.contoDestinazioneId === esistente.id);
+          stato.valori = valori.filter((v) => v.contoId === esistente.id);
+          aggiornaAvvisi();
+        });
+      }
     },
   });
   return ctrl.chiuso;
@@ -113,6 +120,7 @@ export function apriEditorConto({ contoId = null } = {}) {
                 <input id="ec-data" class="campo-data" type="date" value="${esc(stato.data)}">
               </div>
               <p class="nota-fondo">I movimenti dei giorni dopo questa data si sommano al saldo iniziale; quelli di questo giorno o precedenti no, perché il saldo li comprende già.${nuovo ? ' Per un conto nuovo la data è ieri, così contano anche i movimenti di oggi.' : ''} Il saldo può essere negativo (carta di credito, scoperto).</p>
+              ${nuovo ? '' : '<p class="ec-anteprima" role="status" aria-live="polite" data-r="anteprima-saldo"></p>'}
               <p class="flusso-errore" role="status" data-r="avviso-data" hidden>${icona('triangle-alert', 18)}<span></span></p>
             </div>
           </section>
@@ -141,7 +149,26 @@ export function apriEditorConto({ contoId = null } = {}) {
           <button type="button" class="pulsante pulsante-grande" data-az="salva" ${stato.salvando ? 'disabled' : ''}>${nuovo ? 'Crea il conto' : 'Salva le modifiche'}</button>
         </footer>
       </div>`;
+    aggiornaAvvisi();
+  }
+
+  function aggiornaAvvisi() {
     aggiornaAvvisoData();
+    aggiornaAnteprimaSaldo();
+  }
+
+  /** Mostra quanto varrebbe il saldo di oggi con i dati scritti nel modulo, accanto a quello di adesso: si confronta con la banca prima di salvare. */
+  function aggiornaAnteprimaSaldo() {
+    const campo = radice?.querySelector('[data-r="anteprima-saldo"]');
+    if (!campo || !esistente) return;
+    const saldoNuovo = stato.saldo.trim() === '' ? 0 : leggiImporto(stato.saldo);
+    if (saldoNuovo === null || !dataValida(stato.data)) { campo.textContent = ''; return; }
+    const calcola = (conto) => creaStoriaConto(conto, stato.movimentiConto, stato.valori).saldoAl(oggi);
+    const con = calcola({ ...esistente, saldoIniziale: saldoNuovo, dataSaldoIniziale: stato.data });
+    const adesso = calcola(contoCorrente() ?? esistente);
+    campo.textContent = con === adesso
+      ? `Saldo di oggi: ${euro(con)}`
+      : `Con questi dati il saldo di oggi è ${euro(con)} (ora è ${euro(adesso)}). Controllalo con la tua banca prima di salvare.`;
   }
 
   /** Avvisa se la data scelta lascia fuori dal saldo dei movimenti già registrati su questo conto. */
@@ -152,9 +179,9 @@ export function apriEditorConto({ contoId = null } = {}) {
     campo.hidden = esclusi.length === 0;
     if (esclusi.length) {
       const frase = esclusi.length === 1
-        ? 'C\'è 1 movimento di questo conto che non viene sommato al saldo, perché è del giorno del saldo iniziale o precedente.'
-        : `Ci sono ${esclusi.length} movimenti di questo conto che non vengono sommati al saldo, perché sono del giorno del saldo iniziale o precedenti.`;
-      campo.querySelector('span').textContent = `${frase} Per contarli scegli una data precedente al più vecchio.`;
+        ? "C'è 1 movimento registrato nell'app, di questo conto, che non viene sommato al saldo perché è del giorno del saldo iniziale o precedente."
+        : `Ci sono ${esclusi.length} movimenti registrati nell'app, di questo conto, che non vengono sommati al saldo perché sono del giorno del saldo iniziale o precedenti.`;
+      campo.querySelector('span').textContent = `${frase} Se il conto è nuovo, scegli una data precedente al più vecchio. Quelli importati dalla vecchia app sono già nel saldo iniziale.`;
     }
   }
 

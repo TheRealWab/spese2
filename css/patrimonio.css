@@ -110,3 +110,5 @@
 
 /* ---- Editor del conto ---- */
 .ec-saldo { display: grid; gap: var(--sp-3); padding: var(--sp-4); }
+
+.ec-anteprima { min-height: 1.3em; font-size: var(--t-s); font-weight: 600; color: var(--testo-2); }
