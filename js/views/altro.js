@@ -1,5 +1,5 @@
-// Area "Altro" (SPEC §6.5). In Fase 1 funzionano: ciclo mensile, tema, conto predefinito, ordine categorie.
-// Le voci delle fasi successive sono visibili ma disattivate.
+// Area "Altro" (SPEC §6.5), pensata come il profilo di chi usa l'app: in cima la scheda con foto e nome, poi aspetto
+// (tema e sfondo), preferenze, automazioni, dati e sicurezza, informazioni, e la firma del creatore.
 
 import { $, esc } from '../util/dom.js';
 import { icona, cerchioIcona } from '../util/icone.js';
@@ -14,7 +14,13 @@ import { apriEsportaBackup } from '../components/backup-esporta.js';
 import { apriRipristinaBackup } from '../components/backup-ripristina.js';
 import { statoUltimoBackup, descriviUltimoBackup } from '../model/backup.js';
 import { oggiIso } from '../util/date.js';
-import { VERSIONE_APP, FASE_APP } from '../versione.js';
+import { VERSIONE_APP, FASE_APP, CREATORE } from '../versione.js';
+import { conta } from '../db.js';
+import { marchioHtml } from '../util/marchio.js';
+import { htmlAvatar } from '../components/avatar.js';
+import { apriEditorProfilo } from '../components/editor-profilo.js';
+import { apriScegliSfondo } from '../components/scegli-sfondo.js';
+import { nomeSfondo, descriviRiepilogo } from '../model/aspetto.js';
 
 const TEMI = [['auto', 'Automatico'], ['chiaro', 'Chiaro'], ['scuro', 'Scuro']];
 const ORDINI = [['frequenza', 'Più usate'], ['manuale', 'Manuale']];
@@ -32,8 +38,33 @@ export function monta(radice) {
     const backup = statoUltimoBackup(imp.ultimoBackup, oggiIso());
     const blocco = sicurezza();
 
+    const profilo = imp.profilo;
+    const haNome = Boolean(profilo.nome);
+
     radice.innerHTML = `
-      <h1 class="vista-titolo">Altro</h1>
+      <h1 class="solo-sr">Altro</h1>
+
+      <button type="button" class="scheda profilo-scheda" data-az="profilo" aria-label="Il tuo profilo">
+        ${htmlAvatar(profilo, 72)}
+        <span class="profilo-testo">
+          <span class="profilo-nome ${haNome ? '' : 'profilo-invito'}">${haNome ? esc(profilo.nome) : 'Il tuo profilo'}</span>
+          <span class="profilo-sotto" data-r="riepilogo">${haNome ? '&nbsp;' : 'Aggiungi il tuo nome e una foto'}</span>
+        </span>${icona('chevron-right', 18)}
+      </button>
+
+      <section class="gruppo">
+        <h2 class="gruppo-titolo">Aspetto</h2>
+        <div class="scheda">
+          <div class="riga-lista riga-colonna">
+            <span class="riga-titolo">Tema</span>
+            ${segmentato(TEMI, imp.tema, 'Tema')}
+          </div>
+          <button type="button" class="riga-lista" data-az="sfondo">
+            <span class="cerchio cerchio-neutro">${icona('palette', 20)}</span>
+            <span class="riga-testo"><span class="riga-titolo">Sfondo</span><span class="riga-sotto">${esc(nomeSfondo(imp.sfondo))}</span></span>${icona('chevron-right', 18)}
+          </button>
+        </div>
+      </section>
 
       <section class="gruppo">
         <h2 class="gruppo-titolo">Preferenze</h2>
@@ -54,11 +85,6 @@ export function monta(radice) {
               <span class="riga-sotto">${esc(conto?.nome ?? '—')}</span>
             </span>${icona('chevron-right', 18)}
           </button>
-
-          <div class="riga-lista riga-colonna">
-            <span class="riga-titolo">Tema</span>
-            ${segmentato(TEMI, imp.tema, 'Tema')}
-          </div>
 
           <div class="riga-lista riga-colonna">
             <span class="riga-titolo">Ordine delle categorie nell'inserimento</span>
@@ -102,7 +128,7 @@ export function monta(radice) {
           <div class="riga-lista">
             <span class="cerchio cerchio-neutro">${icona('info', 20)}</span>
             <span class="riga-testo">
-              <span class="riga-titolo">Spese 2.0</span>
+              <span class="riga-titolo">${marchioHtml()}</span>
               <span class="riga-sotto">Versione ${VERSIONE_APP} · ${FASE_APP}</span>
             </span>
           </div>
@@ -115,9 +141,23 @@ export function monta(radice) {
           </div>
         </div>
         <p class="nota-fondo">I tuoi dati restano su questo dispositivo. Nessun server, nessun invio.</p>
-      </section>`;
+      </section>
+
+      <p class="creatore">Creata da <strong>${esc(CREATORE)}</strong></p>`;
 
     mostraStatoOffline();
+    if (haNome) mostraRiepilogo();
+  }
+
+  /** La riga sotto il nome: quanti movimenti e conti ci sono (si legge dal database, quindi arriva un attimo dopo). */
+  async function mostraRiepilogo() {
+    try {
+      const movimenti = await conta('movimenti');
+      const campo = $('[data-r="riepilogo"]', radice);
+      if (campo) campo.textContent = descriviRiepilogo({ movimenti, conti: contiAttivi().length });
+    } catch (errore) {
+      console.error(errore);
+    }
   }
 
   async function mostraStatoOffline() {
@@ -157,6 +197,12 @@ export function monta(radice) {
         await salvaImpostazioni({ giornoInizioMese: scelto });
         disegna();
       }
+    } else if (az === 'profilo') {
+      await apriEditorProfilo();
+      disegna();
+    } else if (az === 'sfondo') {
+      await apriScegliSfondo();
+      disegna();
     } else if (az === 'ricorrenti') {
       apriRicorrenti();
     } else if (az === 'importa') {

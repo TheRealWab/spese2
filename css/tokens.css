@@ -8,12 +8,17 @@
   color-scheme: light dark;
 
   /* ---- Superfici ---- */
-  --sfondo: light-dark(#f3f4f8, #0a0b0f);
-  --scheda: light-dark(#ffffff, #17181d);
-  --scheda-2: light-dark(#eef0f5, #22242b);      /* elementi incassati dentro le schede */
-  --scheda-3: light-dark(#e5e8ef, #2c2f38);
+  --sfondo: light-dark(#eaecf3, #07080b);
+  --scheda: light-dark(#ffffff, #181a20);
+  --scheda-2: light-dark(#eceef5, #22252d);      /* elementi incassati dentro le schede */
+  --scheda-3: light-dark(#e1e4ed, #2d303a);
   --bordo: light-dark(#e3e5ed, #2a2c34);
-  --velo: light-dark(rgb(15 17 30 / 0.42), rgb(0 0 0 / 0.6));  /* sfondo dietro ai pannelli */
+  /* Sfondo non piatto: due aloni morbidi (viola in alto a sinistra, turchese in basso a destra) sopra il colore di base */
+  --sfondo-predefinito:
+    radial-gradient(120% 55% at 0% 0%, light-dark(color-mix(in srgb, var(--accento) 17%, transparent), color-mix(in srgb, var(--accento) 24%, transparent)), transparent 72%),
+    radial-gradient(110% 50% at 100% 100%, light-dark(color-mix(in srgb, var(--cat-turchese) 15%, transparent), color-mix(in srgb, var(--cat-turchese) 17%, transparent)), transparent 72%);
+  --sfondo-sfumato: var(--sfondo-predefinito); /* lo sfondo scelto dall'utente lo sostituisce (util/sfondo-app.js) */
+  --velo:light-dark(rgb(15 17 30 / 0.42), rgb(0 0 0 / 0.6));  /* sfondo dietro ai pannelli */
 
   /* ---- Testo ---- */
   --testo: light-dark(#14151a, #f2f3f7);
@@ -51,10 +56,26 @@
   --cat-rosa: light-dark(#e23f7b, #ff86ae);
   --cat-ardesia: light-dark(#5f6b7e, #a3aec2);
 
-  /* ---- Ombre (light-dark accetta solo colori: cambia il colore, non la forma) ---- */
-  --ombra-colore: light-dark(rgb(24 26 60 / 0.08), rgb(0 0 0 / 0));
-  --ombra: 0 2px 12px var(--ombra-colore);
-  --ombra-alta: 0 8px 28px light-dark(rgb(24 26 60 / 0.18), rgb(0 0 0 / 0.5));
+  /* ---- Colori dei tipi di movimento: lo stesso significato in tutta l'app ----
+     entrate = verde, spese = rosso corallo, risparmio = colore dell'app (rosso se negativo), trasferimenti = grigio */
+  --spesa: light-dark(#d1304a, #ff7a8a);
+  --spesa-tenue: light-dark(#fde6ea, #3a1a22);
+  --risparmio: var(--accento);
+
+  /* ---- Rilievo: tre livelli, uguali in tutta l'app ----
+     (light-dark accetta solo colori: cambiano i colori delle ombre, la forma resta la stessa)
+     1 = schede, 2 = elementi in primo piano (cifra principale, barra, pulsante +), 3 = pannelli e finestre. */
+  --ombra-c1: light-dark(rgb(24 26 60 / 0.09), rgb(0 0 0 / 0.55));      /* ombra vicina, netta */
+  --ombra-c2: light-dark(rgb(24 26 60 / 0.10), rgb(0 0 0 / 0.40));      /* ombra lontana, morbida */
+  --ombra-c3: light-dark(rgb(24 26 60 / 0.22), rgb(0 0 0 / 0.60));      /* ombra dei pannelli */
+  --luce: light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.07));  /* filo di luce sul bordo alto */
+  --luce-forte: light-dark(rgb(255 255 255 / 1), rgb(255 255 255 / 0.12));
+  --filo: light-dark(rgb(24 26 60 / 0.07), rgb(255 255 255 / 0.05));    /* contorno sottilissimo */
+  --ombra: 0 1px 2px var(--ombra-c1), 0 6px 18px var(--ombra-c2), inset 0 1px 0 var(--luce), inset 0 0 0 1px var(--filo);
+  --ombra-alta: 0 2px 4px var(--ombra-c1), 0 14px 34px var(--ombra-c3), inset 0 1px 0 var(--luce-forte), inset 0 0 0 1px var(--filo);
+  --ombra-rilievo: 0 2px 4px var(--ombra-c1), 0 10px 26px var(--ombra-c2), inset 0 1px 0 var(--luce-forte), inset 0 0 0 1px var(--filo);
+  --ombra-incasso: inset 0 1px 3px light-dark(rgb(24 26 60 / 0.16), rgb(0 0 0 / 0.55)), inset 0 0 0 1px var(--filo); /* piste, campi */
+  --ombra-rialzo: 0 1px 2px var(--ombra-c1), 0 3px 8px var(--ombra-c2), inset 0 1px 0 var(--luce-forte); /* elementi piccoli che sporgono */
 
   /* ---- Spaziature ---- */
   --sp-1: 4px;

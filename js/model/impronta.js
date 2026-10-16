@@ -21,8 +21,8 @@ export async function registraImpronta() {
   const credenziale = await navigator.credentials.create({
     publicKey: {
       challenge: casuali(32),
-      rp: { name: 'Spese 2.0', id: location.hostname },
-      user: { id: casuali(16), name: 'spese2', displayName: 'Spese 2.0' },
+      rp: { name: 'Wallet', id: location.hostname },
+      user: { id: casuali(16), name: 'spese2', displayName: 'Wallet' },
       pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
       authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'discouraged' },
       timeout: 60_000,

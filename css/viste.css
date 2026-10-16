@@ -57,11 +57,10 @@
 
 /* Riepilogo entrate / spese / risparmio */
 .riepilogo { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); }
-.mini { display: grid; gap: 4px; min-width: 0; padding: var(--sp-3); }
-.mini-et { display: flex; align-items: center; gap: 4px; font-size: var(--t-xs); font-weight: 600; color: var(--testo-2); }
-.mini-entrate .mini-et { color: var(--verde); }
-.mini-valore { font-size: var(--t-m); font-weight: 700; white-space: nowrap; }
-.mini-negativo .mini-valore { color: var(--rosso); }
+.mini { position: relative; display: grid; gap: 4px; min-width: 0; padding: var(--sp-3) var(--sp-3) var(--sp-3) calc(var(--sp-3) + 3px); overflow: hidden; }
+.mini::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--tono, transparent); } /* barretta colorata sul bordo */
+.mini-et { display: flex; align-items: center; gap: 4px; font-size: var(--t-xs); font-weight: 600; color: var(--tono, var(--testo-2)); }
+.mini-valore { font-size: var(--t-m); font-weight: 700; white-space: nowrap; color: var(--tono, var(--testo)); }
 
 /* Elenco per giorno */
 .giorno { display: grid; gap: var(--sp-2); }

@@ -67,6 +67,12 @@ export async function tutti(nome) {
   return comePromessa(store.getAll());
 }
 
+/** Quanti oggetti ci sono in un archivio (senza leggerli). */
+export async function conta(nome) {
+  const { store } = await archivio(nome);
+  return comePromessa(store.count());
+}
+
 export async function leggi(nome, id) {
   const { store } = await archivio(nome);
   return comePromessa(store.get(id));

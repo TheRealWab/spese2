@@ -3,6 +3,7 @@
 import { apriDb } from './db.js';
 import { eseguiSeedSeServe } from './model/seed.js';
 import { caricaImpostazioni, impostazioni, applicaTema, seguiTemaDiSistema } from './model/impostazioni.js';
+import { applicaSfondo } from './util/sfondo-app.js';
 import { caricaCatalogo } from './model/catalogo.js';
 import { oggiIso } from './util/date.js';
 import { icona } from './util/icone.js';
@@ -303,6 +304,7 @@ async function avvia() {
   }
 
   applicaTema(impostazioni().tema);
+  applicaSfondo(impostazioni().sfondo);
   seguiTemaDiSistema();
   costruisciNavigazione();
   inizializzaBarra();

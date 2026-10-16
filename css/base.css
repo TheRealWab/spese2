@@ -18,6 +18,16 @@ body {
   overscroll-behavior-y: none;
 }
 
+/* L'alone dello sfondo sta su uno strato fisso: non si muove scorrendo e non pesa sullo scorrimento */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--sfondo-sfumato);
+  pointer-events: none;
+}
+
 body.pannello-aperto { overflow: hidden; }
 
 h1, h2, h3, p { margin: 0; }

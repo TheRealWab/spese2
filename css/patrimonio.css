@@ -101,7 +101,7 @@
 .pt-inv-piede { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); flex-wrap: wrap; }
 .pt-aggiornato { display: inline-flex; align-items: center; gap: 4px; font-size: var(--t-xs); color: var(--testo-3); }
 .pt-aggiornato.vecchio { color: var(--arancio); font-weight: 600; }
-.pulsante-piccolo { min-height: 40px; padding: 0 var(--sp-4); font-size: var(--t-s); }
+.pulsante-piccolo { min-height: var(--tocco); padding: 0 var(--sp-4); font-size: var(--t-s); }
 .pulsante-pericolo-tenue { background: var(--rosso-tenue); color: var(--rosso); }
 
 .pt-azioni { overflow: hidden; }

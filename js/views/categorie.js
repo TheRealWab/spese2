@@ -4,7 +4,7 @@ import { $, esc } from '../util/dom.js';
 import { icona, cerchioIcona } from '../util/icone.js';
 import { euro, euroCompatto, percentuale } from '../util/formato.js';
 import { oggiIso } from '../util/date.js';
-import { animaNumero } from '../util/animazione.js';
+import { animaCifre, attrCifra } from '../util/animazione.js';
 import { abilitaSwipe } from '../util/swipe.js';
 import { impostazioni } from '../model/impostazioni.js';
 import { movimentiPeriodo } from '../model/movimenti.js';
@@ -19,7 +19,7 @@ import { apriGestioneCategorie } from '../components/gestione-categorie.js';
 // Stato che sopravvive al cambio di area: tornando su Categorie si ritrova lo stesso periodo e lo stesso tipo.
 let periodo = null;
 let tipo = 'spesa';
-let ultimoValoreMostrato = 0;
+const cifreMostrate = new Map(); // ultime cifre viste: la prossima animazione parte da lì (la prima volta da 0)
 
 const plurale = (n, uno, molti) => `${n} ${n === 1 ? uno : molti}`;
 
@@ -55,7 +55,7 @@ export function monta(radice) {
           <span class="ct-sotto">${plurale(r.conteggio, 'movimento', 'movimenti')} · ${percentuale(r.percentuale)}</span>
           <span class="ct-barra" aria-hidden="true"><span class="ct-barra-riempi" style="--l:${r.percentuale.toFixed(1)}%; --i:${indice}"></span></span>
         </span>
-        <span class="ct-importo">${euro(r.totale)}</span>
+        <span class="ct-importo" ${attrCifra(`${tipo}:${r.categoriaId}`, r.totale)}>${euro(r.totale)}</span>
       </button>`;
   }
 
@@ -83,9 +83,9 @@ export function monta(radice) {
     const t = totaliPerCategoria(movimenti, tipo);
     const etichetta = tipo === 'spesa' ? 'Spese' : 'Entrate';
     contenuto.innerHTML = `
-      <section class="scheda indicatore ct-totale">
+      <section class="scheda indicatore ct-totale ${tipo === 'spesa' ? 'tono-spesa' : 'tono-entrata'}">
         <p class="ind-et">${etichetta} del periodo</p>
-        <div class="ind-riga"><span class="ind-valore" data-r="hero"></span></div>
+        <div class="ind-riga"><span class="ind-valore" data-r="hero" ${attrCifra('hero', t.totale, 'compatto')}>${euroCompatto(t.totale)}</span></div>
         <p class="ind-sotto">${t.conteggio ? `${plurale(t.conteggio, 'movimento', 'movimenti')} in ${plurale(t.righe.length, 'categoria', 'categorie')}` : 'Nessun movimento in questo periodo'}</p>
       </section>
       ${t.righe.length
@@ -102,8 +102,7 @@ export function monta(radice) {
       void contenuto.offsetWidth;
       contenuto.classList.add(direzione > 0 ? 'slide-avanti' : 'slide-indietro');
     }
-    animaNumero($('[data-r="hero"]', contenuto), ultimoValoreMostrato, t.totale, euroCompatto);
-    ultimoValoreMostrato = t.totale;
+    animaCifre(contenuto, cifreMostrate);
 
     // Le barre partono da 0 e si riempiono (la transizione CSS fa il resto).
     requestAnimationFrame(() => requestAnimationFrame(() => contenuto.querySelectorAll('.ct-barra-riempi').forEach((b) => b.classList.add('piena'))));
@@ -114,7 +113,7 @@ export function monta(radice) {
     if (nuovoTipo && nuovoTipo !== tipo) {
       tipo = nuovoTipo;
       radice.querySelectorAll('[data-tipo]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tipo === tipo)));
-      ultimoValoreMostrato = 0;
+      cifreMostrate.clear(); // cambiando tra spese ed entrate le cifre ripartono da 0
       disegna();
       return;
     }

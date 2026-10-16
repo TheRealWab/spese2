@@ -37,6 +37,17 @@
   border-radius: var(--r-l);
   box-shadow: var(--ombra);
 }
+/* La scheda protagonista (cifra grande): un gradino più in alto e una leggera luce dall'alto */
+.indicatore {
+  background: linear-gradient(165deg, color-mix(in srgb, var(--accento) 8%, var(--scheda)), var(--scheda) 60%);
+  box-shadow: var(--ombra-rilievo);
+}
+
+/* ---- Tono di un tipo di movimento: imposta --tono, che etichette, cifre e barrette usano ---- */
+.tono-entrata { --tono: var(--verde); }
+.tono-spesa { --tono: var(--spesa); }
+.tono-risparmio { --tono: var(--risparmio); }
+.tono-negativo { --tono: var(--rosso); }
 
 /* ---- Pulsanti ---- */
 .pulsante {
@@ -47,16 +58,18 @@
   min-height: 52px;
   padding: 0 var(--sp-6);
   border-radius: var(--r-m);
-  background: var(--accento);
+  --tinta: var(--accento);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tinta) 84%, #fff), var(--tinta));
   color: var(--accento-testo);
   font-weight: 650;
-  transition: transform var(--dur-1) var(--ease), opacity var(--dur-1), background var(--dur-1);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.28), 0 1px 2px var(--ombra-c1), 0 4px 12px color-mix(in srgb, var(--tinta) 32%, transparent);
+  transition: transform var(--dur-1) var(--ease), opacity var(--dur-1), box-shadow var(--dur-1);
 }
-.pulsante:active:not(:disabled) { transform: scale(0.98); }
-.pulsante:disabled { opacity: 0.45; }
+.pulsante:active:not(:disabled) { transform: translateY(1px) scale(0.985); box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.18), 0 1px 2px var(--ombra-c1); }
+.pulsante:disabled { opacity: 0.45; box-shadow: none; }
 .pulsante-grande { min-height: 56px; width: 100%; font-size: var(--t-m); border-radius: var(--r-l); }
-.pulsante-secondario { background: var(--scheda-2); color: var(--testo); }
-.pulsante-pericolo { background: var(--rosso); color: #fff; }
+.pulsante-secondario { background: var(--scheda-2); color: var(--testo); box-shadow: var(--ombra-rialzo); }
+.pulsante-pericolo { --tinta: var(--rosso); color: #fff; }
 
 .btn-icona {
   flex: none;
@@ -79,9 +92,10 @@
   padding: 3px;
   border-radius: var(--r-pieno);
   background: var(--scheda-2);
+  box-shadow: var(--ombra-incasso);
 }
 .segmentato button {
-  min-height: 38px;
+  min-height: var(--tocco);
   padding: 0 var(--sp-3);
   border-radius: var(--r-pieno);
   font-size: var(--t-s);
@@ -91,9 +105,9 @@
   transition: background var(--dur-1) var(--ease), color var(--dur-1);
 }
 .segmentato button[aria-pressed="true"] {
-  background: light-dark(#ffffff, #3b3e4a);
+  background: light-dark(#ffffff, #3d414d);
   color: var(--testo);
-  box-shadow: 0 1px 3px light-dark(rgb(20 22 50 / 0.14), rgb(0 0 0 / 0.3));
+  box-shadow: var(--ombra-rialzo);
 }
 
 /* ---- Chip ---- */
@@ -105,6 +119,7 @@
   padding: 0 var(--sp-3);
   border-radius: var(--r-pieno);
   background: var(--scheda-2);
+  box-shadow: var(--ombra-rialzo);
   font-size: var(--t-s);
   font-weight: 600;
   max-width: 100%;
@@ -200,12 +215,12 @@ html[data-nav="compatta"] .nav-etichetta { max-height: 0; margin-top: 0; opacity
   width: var(--fab);
   height: var(--fab);
   border-radius: 20px;
-  background: var(--accento);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accento) 80%, #fff), var(--accento));
   color: var(--accento-testo);
-  box-shadow: var(--ombra-alta);
-  transition: transform var(--dur-1) var(--ease), bottom var(--dur-3) var(--ease);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.32), 0 2px 4px var(--ombra-c1), 0 10px 24px color-mix(in srgb, var(--accento) 42%, transparent);
+  transition: transform var(--dur-1) var(--ease), bottom var(--dur-3) var(--ease), box-shadow var(--dur-1);
 }
-.fab:active { transform: scale(0.94); }
+.fab:active { transform: translateY(1px) scale(0.94); box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.2), 0 2px 6px var(--ombra-c1); }
 
 /* ---- Righe di elenco (impostazioni) ---- */
 .gruppo { display: grid; gap: var(--sp-2); }
@@ -264,7 +279,7 @@ html[data-nav="compatta"] .nav-etichetta { max-height: 0; margin-top: 0; opacity
   transition: background var(--dur-2) var(--ease);
 }
 .pannello-sfondo.aperto { background: var(--velo); }
-.pannello-sfondo.pannello-pieno.aperto { background: var(--sfondo); }
+.pannello-sfondo.pannello-pieno.aperto { background: var(--sfondo-sfumato), var(--sfondo); }
 
 .pannello {
   position: absolute;
@@ -284,6 +299,7 @@ html[data-nav="compatta"] .nav-etichetta { max-height: 0; margin-top: 0; opacity
   overflow-y: auto;
   padding-bottom: var(--safe-sotto);
   border-radius: var(--r-xl) var(--r-xl) 0 0;
+  box-shadow: 0 -4px 28px var(--ombra-c3), inset 0 1px 0 var(--luce-forte);
   transform: translateY(100%);
 }
 .pannello-sheet .pannello::before {
@@ -300,7 +316,7 @@ html[data-nav="compatta"] .nav-etichetta { max-height: 0; margin-top: 0; opacity
   inset: 0;
   max-width: var(--larghezza-max);
   margin: 0 auto;
-  background: var(--sfondo);
+  background: var(--sfondo-sfumato), var(--sfondo);
   transform: translateY(100%);
 }
 

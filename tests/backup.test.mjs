@@ -126,7 +126,7 @@ test('giorniTra attraversa mesi e anni bisestili', () => {
 });
 
 test('nome del file di backup', () => {
-  assert.equal(nomeFileBackup('2026-10-14'), 'spese-backup-2026-10-14.json');
+  assert.equal(nomeFileBackup('2026-10-14'), 'wallet-backup-2026-10-14.json');
 });
 
 test('base64: viaggio di andata e ritorno anche con tanti byte', () => {

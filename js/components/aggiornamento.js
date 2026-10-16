@@ -17,8 +17,8 @@ export function chiediAggiornamento({ versione = '' } = {}) {
   sfondo.className = 'pannello-sfondo pannello-dialogo avviso-app'; // niente "pannello-aperto": non è nella pila dei pannelli
   const titolo = 'Aggiornamento disponibile';
   const testo = versione
-    ? `È pronta la versione ${versione} di Spese 2.0. Vuoi aggiornare ora? I tuoi dati restano dove sono.`
-    : 'È pronta una nuova versione di Spese 2.0. Vuoi aggiornare ora? I tuoi dati restano dove sono.';
+    ? `È pronta la versione ${versione} di Wallet. Vuoi aggiornare ora? I tuoi dati restano dove sono.`
+    : 'È pronta una nuova versione di Wallet. Vuoi aggiornare ora? I tuoi dati restano dove sono.';
   sfondo.innerHTML = `
     <div class="pannello" role="alertdialog" aria-modal="true" aria-label="${esc(titolo)}" tabindex="-1">
       <div class="dialogo-corpo"><h2>${esc(titolo)}</h2><p>${esc(testo)}</p></div>

@@ -5,6 +5,8 @@ import { oggiIso } from '../util/date.js';
 import { caricaCatalogo } from './catalogo.js';
 import { caricaImpostazioni, impostazioni, applicaTema, salvaImpostazioni, ID_IMPOSTAZIONI } from './impostazioni.js';
 import { ARCHIVI_BACKUP, cifra, pacchettoDati, unisci } from './backup.js';
+import { aspettoDopoRipristino, normalizzaProfilo } from './aspetto.js';
+import { applicaSfondo } from '../util/sfondo-app.js';
 
 async function leggiArchivi() {
   const lista = await Promise.all(ARCHIVI_BACKUP.map((nome) => tutti(nome)));
@@ -27,6 +29,7 @@ export async function contaDatiAttuali() {
 async function aggiornaMemoria() {
   await caricaImpostazioni();
   applicaTema(impostazioni().tema);
+  applicaSfondo(impostazioni().sfondo);
   await caricaCatalogo();
   document.dispatchEvent(new CustomEvent('spese2:impostazioni', { detail: { ripristino: true } }));
   document.dispatchEvent(new CustomEvent('spese2:movimenti', { detail: { azione: 'ripristinato' } }));
@@ -42,6 +45,12 @@ export async function ripristinaBackup(dati, modo) {
   if (modo === 'unisci') {
     const risultato = unisci(await leggiArchivi(), dati);
     await salvaGruppo(risultato.daSalvare);
+    // Il profilo di questo telefono non si tocca; se è ancora vuoto, si prende quello del backup.
+    const profiloLocale = impostazioni().profilo;
+    const profiloBackup = normalizzaProfilo(dati.impostazioni.find((i) => i.id === ID_IMPOSTAZIONI)?.profilo);
+    if (!profiloLocale.nome && !profiloLocale.foto && (profiloBackup.nome || profiloBackup.foto)) {
+      await salvaImpostazioni({ profilo: profiloBackup });
+    }
     await aggiornaMemoria();
     return { modo, aggiunti: risultato.aggiunti, aggiornati: risultato.aggiornati, saltati: risultato.saltati };
   }
@@ -52,6 +61,7 @@ export async function ripristinaBackup(dati, modo) {
     ...attuali,
     ...dalBackup,
     id: ID_IMPOSTAZIONI,
+    ...aspettoDopoRipristino(attuali, dalBackup), // un backup senza profilo e sfondo non cancella quelli di questo telefono
     sicurezza: attuali.sicurezza,
     ultimoBackup: attuali.ultimoBackup,
     seedVersione: dalBackup.seedVersione ?? attuali.seedVersione ?? 1, // senza, l'app ricreerebbe i dati di partenza

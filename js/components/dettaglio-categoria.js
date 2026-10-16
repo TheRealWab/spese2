@@ -9,6 +9,7 @@ import { esc } from '../util/dom.js';
 import { icona, cerchioIcona } from '../util/icone.js';
 import { euro, etichettaGiorno, percentuale } from '../util/formato.js';
 import { oggiIso } from '../util/date.js';
+import { animaCifre, attrCifra } from '../util/animazione.js';
 import { impostazioni } from '../model/impostazioni.js';
 import { movimentiPeriodo } from '../model/movimenti.js';
 import { categoriaPerId } from '../model/catalogo.js';
@@ -25,6 +26,7 @@ const SFUMATURE = [100, 78, 60, 46, 36, 28]; // percentuale di colore dei segmen
  */
 export function apriDettaglioCategoria({ categoriaId, periodo, tipo }) {
   const stato = { movimenti: [], filtro: null };
+  const cifre = new Map(); // ultime cifre viste, per far scorrere i numeri quando cambiano
   let radice = null;
 
   const ctrl = apriPannello({
@@ -70,7 +72,7 @@ export function apriDettaglioCategoria({ categoriaId, periodo, tipo }) {
             ${cerchioIcona(categoria?.icona ?? 'package', colore, 56)}
             <div class="ct-hero-testo">
               <p class="ind-et">${esc(etichettaPeriodo(periodo, impostazioni().giornoInizioMese))}</p>
-              <span class="ind-valore ct-hero-valore">${euro(totale)}</span>
+              <span class="ind-valore ct-hero-valore ${tipo === 'spesa' ? 'tono-spesa' : 'tono-entrata'}" ${attrCifra('totale', totale)}>${euro(totale)}</span>
               <p class="ind-sotto">${stato.movimenti.length ? plurale(stato.movimenti.length, 'movimento', 'movimenti') : 'Nessun movimento in questo periodo'}</p>
             </div>
           </section>
@@ -80,6 +82,7 @@ export function apriDettaglioCategoria({ categoriaId, periodo, tipo }) {
         </div>
       </div>`;
     if (posizione) radice.querySelector('.flusso-corpo').scrollTop = posizione;
+    animaCifre(radice, cifre);
   }
 
   function htmlNote(voci) {
@@ -109,7 +112,7 @@ export function apriDettaglioCategoria({ categoriaId, periodo, tipo }) {
           ${punto}
           <span class="nota-nome">${v.chiave === CHIAVE_SENZA_NOTA ? 'Senza nota' : esc(v.nota)}</span>
           <span class="nota-dati">${plurale(v.conteggio, 'volta', 'volte')} · ${percentuale((v.importo / totaleNote) * 100)}</span>
-          <span class="nota-importo">${euro(v.importo)}</span>
+          <span class="nota-importo" ${attrCifra(`nota:${v.chiave}`, v.importo)}>${euro(v.importo)}</span>
         </button>`;
     }).join('');
 

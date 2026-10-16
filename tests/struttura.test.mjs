@@ -118,6 +118,7 @@ test('.gitignore esclude la cartella privata e i backup', () => {
   const gitignore = leggi('.gitignore');
   assert.match(gitignore, /^_privato\/$/m);
   assert.match(gitignore, /^spese-backup-\*\.json$/m);
+  assert.match(gitignore, /^wallet-backup-\*\.json$/m);
 });
 
 test('ogni file JavaScript dell\'app ha una sintassi valida (un errore qui bloccherebbe l\'intera app)', () => {

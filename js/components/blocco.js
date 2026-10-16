@@ -2,6 +2,9 @@
 // inserisce il PIN o si conferma l'impronta. Si attiva all'apertura dell'app e quando si torna da lontano.
 
 import { icona } from '../util/icone.js';
+import { esc } from '../util/dom.js';
+import { marchioHtml } from '../util/marchio.js';
+import { FRASE } from '../versione.js';
 import { creaTastierinoPin } from './tastierino-pin.js';
 import { sicurezza, serveBlocco, segnaSbloccato, segnaBloccato, segnaNascosta, azzeraNascosta, leggiTentativi, salvaTentativi, azzeraTentativi } from '../model/blocco.js';
 import { verificaPin, registraErrore, attesaRimasta } from '../model/sicurezza.js';
@@ -71,7 +74,7 @@ function mostraBlocco() {
   elemento.innerHTML = `
     <div class="blocco-testa">
       <span class="cerchio col-indaco" style="--dim:64px">${icona('lock', 30)}</span>
-      <h1>Spese 2.0</h1>
+      <h1>${marchioHtml()}</h1>
       <p class="blocco-stato" role="status" data-r="stato">Inserisci il PIN</p>
     </div>
     <div class="blocco-pin" data-r="pin"></div>
@@ -83,6 +86,10 @@ function mostraBlocco() {
         <button type="button" class="pulsante pulsante-pericolo" data-az="conferma-reset">Cancella tutto</button>
       </div>
     </div>
+    <figure class="blocco-frase" data-r="frase">
+      <blockquote><q>${esc(FRASE.testo)}</q></blockquote>
+      <figcaption><cite>${esc(FRASE.autore)}</cite></figcaption>
+    </figure>
     <div class="blocco-azioni">
       ${impronta ? `<button type="button" class="pulsante pulsante-secondario" data-az="impronta">${icona('fingerprint-pattern', 20)} Usa l'impronta</button>` : ''}
       <button type="button" class="blocco-link" data-az="dimenticato">Ho dimenticato il PIN</button>
@@ -148,6 +155,7 @@ function mostraBlocco() {
     elemento.querySelector('[data-r="conferma"]').hidden = !si;
     elemento.querySelector('.blocco-testa').hidden = si;
     elemento.querySelector('[data-r="pin"]').hidden = si;
+    elemento.querySelector('[data-r="frase"]').hidden = si;
     elemento.querySelector('.blocco-azioni').hidden = si;
   }
 

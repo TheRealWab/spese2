@@ -50,7 +50,7 @@ export function apriRipristinaBackup() {
         <section class="scheda flusso-intro">
           <span class="cerchio col-azzurro" style="--dim:56px">${icona('upload', 28)}</span>
           <h3>Apri un backup</h3>
-          <p>Scegli il file <strong>spese-backup-….json</strong> e scrivi la password che hai usato per crearlo.</p>
+          <p>Scegli il file <strong>wallet-backup-….json</strong> (o spese-backup-….json, se è un backup fatto prima) e scrivi la password che hai usato per crearlo.</p>
         </section>
         <form class="campo-gruppo" autocomplete="off">
           <button type="button" class="pulsante pulsante-secondario" data-az="scegli-file">${icona('upload', 18)} ${stato.testo ? 'Cambia file' : 'Scegli il file'}</button>

@@ -51,7 +51,7 @@ export async function dimenticaFileBackup() {
 export function scegliNuovoFile(nomeSuggerito) {
   return window.showSaveFilePicker({
     suggestedName: nomeSuggerito,
-    types: [{ description: 'Backup di Spese 2.0', accept: { 'application/json': ['.json'] } }],
+    types: [{ description: 'Backup di Wallet', accept: { 'application/json': ['.json'] } }],
   });
 }
 

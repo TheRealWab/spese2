@@ -1,4 +1,4 @@
-// Service worker di Spese 2.0: rende l'app disponibile offline.
+// Service worker di Wallet: rende l'app disponibile offline.
 //
 // SCOPE: il file sta nella cartella dell'app (es. /spese2/sw.js), quindi controlla SOLO quel percorso.
 // L'origine therealwab.github.io è condivisa con altre app: non vanno toccate le loro cache,
@@ -6,7 +6,7 @@
 
 // Va tenuta uguale a VERSIONE_APP in js/versione.js (lo verifica un test).
 // Cambiarla a ogni rilascio: cambia il nome della cache e i file vengono riscaricati.
-const VERSIONE = '1.9.4';
+const VERSIONE = '2.0.0';
 const PREFISSO_CACHE = 'spese2-';
 const CACHE = `${PREFISSO_CACHE}${VERSIONE}`;
 
@@ -27,10 +27,14 @@ const FILE = [
   'css/patrimonio.css',
   'css/grafici.css',
   'css/ricorrenti.css',
+  'css/profilo.css',
   'js/app.js',
   'js/db.js',
   'js/versione.js',
   'js/util/animazione.js',
+  'js/util/immagine.js',
+  'js/util/marchio.js',
+  'js/util/sfondo-app.js',
   'js/util/swipe.js',
   'js/util/scarica.js',
   'js/util/date.js',
@@ -40,6 +44,7 @@ const FILE = [
   'js/util/icone.js',
   'js/util/id.js',
   'js/model/azzera.js',
+  'js/model/aspetto.js',
   'js/model/backup.js',
   'js/model/backup-db.js',
   'js/model/calcoli.js',
@@ -73,6 +78,9 @@ const FILE = [
   'js/views/mese.js',
   'js/views/patrimonio.js',
   'js/components/aggiornamento.js',
+  'js/components/avatar.js',
+  'js/components/editor-profilo.js',
+  'js/components/scegli-sfondo.js',
   'js/components/gestione-note.js',
   'js/components/importa-guidata.js',
   'js/components/aggiorna-valore.js',
@@ -112,17 +120,12 @@ const FILE = [
 // In sviluppo (localhost) si preferisce la rete, così le modifiche si vedono subito; offline vale la cache.
 const SVILUPPO = ['localhost', '127.0.0.1', '[::1]'].includes(self.location.hostname);
 
-// TRANSITORIO (da togliere in uno dei prossimi rilasci): la 1.5.0 eventualmente ancora installata sul telefono non sa
-// chiedere conferma all'utente, quindi per quella sola volta l'aggiornamento resta automatico.
-const CACHE_SENZA_AVVISO = `${PREFISSO_CACHE}1.5.0`;
-
 self.addEventListener('install', (evento) => {
   // La nuova versione NON si attiva da sola: resta "in attesa" finché l'utente, dall'avviso dell'app,
   // sceglie "Aggiorna" (messaggio 'attiva' qui sotto).
   // cache: 'reload' salta la cache HTTP di GitHub Pages (max-age=600): senza, per ~10 minuti dopo una
   // pubblicazione la nuova cache potrebbe riempirsi di file vecchi.
   evento.waitUntil((async () => {
-    if ((await caches.keys()).includes(CACHE_SENZA_AVVISO)) self.skipWaiting();
     const cache = await caches.open(CACHE);
     await cache.addAll(FILE.map((file) => new Request(file, { cache: 'reload' })));
   })());

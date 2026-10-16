@@ -5,7 +5,7 @@ import { $, esc } from '../util/dom.js';
 import { icona, cerchioIcona } from '../util/icone.js';
 import { euro, euroCompatto, euroConSegno, percentualeConSegno } from '../util/formato.js';
 import { oggiIso } from '../util/date.js';
-import { animaNumero } from '../util/animazione.js';
+import { animaCifre, attrCifra } from '../util/animazione.js';
 import { importiNascosti, mostraImporto } from '../util/importi-privati.js';
 import { impostazioni, salvaImpostazioni } from '../model/impostazioni.js';
 import { tutti } from '../db.js';
@@ -25,7 +25,7 @@ import { apriGestioneConti } from '../components/gestione-conti.js';
 
 // Stato che sopravvive al cambio di area: tornando su Patrimonio si ritrova lo stesso periodo.
 let periodo = null;
-let ultimoValoreMostrato = null;
+const cifreMostrate = new Map(); // ultime cifre viste: la prossima animazione parte da lì (la prima volta da 0)
 
 const classeVariazione = (cent) => (cent > 0 ? 'pt-su' : (cent < 0 ? 'pt-giu' : ''));
 
@@ -70,11 +70,12 @@ export function monta(radice) {
     const segnoCent = v.assoluta;
     const percentuale = v.percentuale === null ? '' : ` (${percentualeConSegno(v.percentuale)})`;
     const importo = importiNascosti() ? '•••••' : euroConSegno(segnoCent);
+    const totale = patrimonioAl(dati.storie, dati.oggi);
     return `
       <section class="scheda indicatore pt-hero">
         <p class="ind-et">Patrimonio totale</p>
-        <div class="ind-riga"><span class="ind-valore" data-r="totale"></span></div>
-        <p class="pt-variazione ${classeVariazione(segnoCent)}">${icona(segnoCent < 0 ? 'trending-down' : 'trending-up', 18)}<span>${esc(importo + percentuale)} nell'ultimo mese</span></p>
+        <div class="ind-riga"><span class="ind-valore" data-r="totale" ${attrCifra('totale', totale, 'compatto', true)}>${esc(mostraImporto(totale, euroCompatto))}</span></div>
+        <p class="pt-variazione ${classeVariazione(segnoCent)}">${icona(segnoCent < 0 ? 'trending-down' : 'trending-up', 18)}<span><span ${attrCifra('variazione', segnoCent, 'segno', true)}>${esc(importo)}</span>${esc(percentuale)} nell'ultimo mese</span></p>
         ${htmlRipartizione()}
       </section>`;
   }
@@ -86,7 +87,7 @@ export function monta(radice) {
     const voce = (classe, nome, percentuale, cent) => `
       <div class="pt-rip-voce">
         <span class="pt-rip-punto ${classe}"></span>
-        <span class="pt-rip-testo"><span class="pt-rip-nome">${nome} <strong>${percentuale}%</strong></span><span class="pt-rip-importo">${esc(mostraImporto(cent))}</span></span>
+        <span class="pt-rip-testo"><span class="pt-rip-nome">${nome} <strong>${percentuale}%</strong></span><span class="pt-rip-importo" ${attrCifra(`rip:${nome}`, cent, 'euro', true)}>${esc(mostraImporto(cent))}</span></span>
       </div>`;
     return `
       <div class="pt-rip" role="group" aria-label="Divisione tra investito e liquidità">
@@ -107,7 +108,7 @@ export function monta(radice) {
       <button type="button" class="riga-lista" data-conto="${esc(conto.id)}">
         ${cerchioIcona(conto.icona, conto.colore, 44)}
         <span class="riga-testo"><span class="riga-titolo">${esc(conto.nome)}</span><span class="riga-sotto">${esc(ETICHETTA_TIPO_CONTO[conto.tipo] ?? '')}</span></span>
-        <span class="pt-saldo ${saldo < 0 ? 'pt-giu' : ''}">${esc(mostraImporto(saldo))}</span>
+        <span class="pt-saldo ${saldo < 0 ? 'pt-giu' : ''}" ${attrCifra(`conto:${conto.id}`, saldo, 'euro', true)}>${esc(mostraImporto(saldo))}</span>
       </button>`;
   }
 
@@ -123,9 +124,9 @@ export function monta(radice) {
           ${icona('chevron-right', 18)}
         </button>
         <dl class="pt-inv-dati">
-          <div><dt>Versato</dt><dd>${esc(mostraImporto(r.versato))}</dd></div>
-          <div><dt>Valore attuale</dt><dd>${esc(mostraImporto(r.valore))}</dd></div>
-          <div class="${classeVariazione(r.guadagno)}"><dt>Guadagno</dt><dd>${esc(importiNascosti() ? '•••••' : euroConSegno(r.guadagno))}${perc ? `<span class="pt-perc">${esc(perc)}</span>` : ''}</dd></div>
+          <div><dt>Versato</dt><dd ${attrCifra(`versato:${conto.id}`, r.versato, 'euro', true)}>${esc(mostraImporto(r.versato))}</dd></div>
+          <div><dt>Valore attuale</dt><dd ${attrCifra(`valore:${conto.id}`, r.valore, 'euro', true)}>${esc(mostraImporto(r.valore))}</dd></div>
+          <div class="${classeVariazione(r.guadagno)}"><dt>Guadagno</dt><dd><span ${attrCifra(`guadagno:${conto.id}`, r.guadagno, 'segno', true)}>${esc(importiNascosti() ? '•••••' : euroConSegno(r.guadagno))}</span>${perc ? `<span class="pt-perc">${esc(perc)}</span>` : ''}</dd></div>
         </dl>
         <div class="pt-inv-piede">
           <span class="pt-aggiornato ${agg.vecchio ? 'vecchio' : ''}">${icona('clock', 14)} ${esc(agg.testo)}</span>
@@ -149,7 +150,6 @@ export function monta(radice) {
     const attivi = dati.conti.filter((c) => !c.archiviato);
     const normali = attivi.filter((c) => c.tipo !== 'investimenti');
     const investimenti = attivi.filter((c) => c.tipo === 'investimenti');
-    const totale = patrimonioAl(dati.storie, dati.oggi);
 
     contenuto.innerHTML = `
       ${htmlHero()}
@@ -175,9 +175,7 @@ export function monta(radice) {
         </button>
       </div>`;
 
-    const elTotale = $('[data-r="totale"]', contenuto);
-    if (importiNascosti()) { elTotale.textContent = mostraImporto(totale); ultimoValoreMostrato = null; }
-    else { animaNumero(elTotale, ultimoValoreMostrato ?? totale, totale, euroCompatto); ultimoValoreMostrato = totale; }
+    animaCifre(contenuto, cifreMostrate);
 
     selettore = creaSelettorePeriodo($('[data-r="selettore"]', contenuto), {
       periodo,

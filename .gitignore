@@ -7,7 +7,9 @@
 _privato/
 _privato/**
 
-# Backup ed export dei dati (nome file previsto dall'app: spese-backup-AAAA-MM-GG.json)
+# Backup ed export dei dati (nome file previsto dall'app: wallet-backup-AAAA-MM-GG.json; i vecchi si chiamano spese-backup-…)
+wallet-backup-*.json
+wallet-backup-*
 spese-backup-*.json
 spese-backup-*
 *backup*.json

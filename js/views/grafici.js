@@ -6,7 +6,7 @@ import { $, esc } from '../util/dom.js';
 import { icona, cerchioIcona } from '../util/icone.js';
 import { euro, euroCompatto, euroConSegno, percentuale, percentualeConSegno } from '../util/formato.js';
 import { oggiIso } from '../util/date.js';
-import { animaNumero } from '../util/animazione.js';
+import { animaCifre, attrCifra } from '../util/animazione.js';
 import { importiNascosti } from '../util/importi-privati.js';
 import { impostazioni, salvaImpostazioni } from '../model/impostazioni.js';
 import { tutti } from '../db.js';
@@ -26,7 +26,7 @@ import { apriDettaglioCategoria } from '../components/dettaglio-categoria.js';
 
 // Stato che sopravvive al cambio di area: tornando su Grafici si ritrova lo stesso periodo.
 let periodo = null;
-let ultimaSpesa = null; // per far scorrere la cifra del confronto
+const cifreMostrate = new Map(); // ultime cifre viste: la prossima animazione parte da lì (la prima volta da 0)
 
 const plurale = (n, uno, molti) => `${n} ${n === 1 ? uno : molti}`;
 
@@ -90,7 +90,7 @@ export function monta(radice) {
           <div class="riga-cat gf-riga-altre">
             <span class="cerchio cerchio-neutro" style="--dim:44px">${icona('ellipsis', 22)}</span>
             <span class="ct-testo"><span class="ct-nome">Altre categorie</span><span class="ct-sotto">${plurale(r.conteggio, 'movimento', 'movimenti')} · ${percentuale(r.percentuale)}</span></span>
-            <span class="ct-importo">${euro(r.totale)}</span>
+            <span class="ct-importo" ${attrCifra('altre', r.totale)}>${euro(r.totale)}</span>
           </div>`;
       }
       const c = categoriaPerId(r.categoriaId);
@@ -98,7 +98,7 @@ export function monta(radice) {
         <button type="button" class="riga-cat col-${esc(c?.colore ?? 'ardesia')}" data-id="${esc(r.categoriaId)}">
           ${cerchioIcona(c?.icona ?? 'package', c?.colore ?? 'ardesia', 44)}
           <span class="ct-testo"><span class="ct-nome">${esc(c?.nome ?? 'Categoria eliminata')}</span><span class="ct-sotto">${plurale(r.conteggio, 'movimento', 'movimenti')} · ${percentuale(r.percentuale)}</span></span>
-          <span class="ct-importo">${euro(r.totale)}</span>
+          <span class="ct-importo" ${attrCifra(`cat:${r.categoriaId}`, r.totale)}>${euro(r.totale)}</span>
         </button>`;
     };
     return scheda('Dove sono finiti i soldi?', `
@@ -127,8 +127,9 @@ export function monta(radice) {
       }
       if (c.inCorso) righe.push('<p class="gf-sotto">Il periodo è in corso: il confronto è fatto sugli stessi giorni dei periodi precedenti.</p>');
     }
+    const speseTotali = movimentiPeriodo.reduce((s, m) => (m.tipo === 'spesa' ? s + m.importo : s), 0);
     return scheda('Sto spendendo più o meno di prima?', `
-      <div class="gf-cifra"><span class="gf-cifra-et">Spese del periodo</span><span class="ind-valore" data-r="spese"></span></div>
+      <div class="gf-cifra tono-spesa"><span class="gf-cifra-et">Spese del periodo</span><span class="ind-valore" data-r="spese" ${attrCifra('spese', speseTotali, 'compatto')}>${euroCompatto(speseTotali)}</span></div>
       ${righe.join('')}`);
   }
 
@@ -189,12 +190,15 @@ export function monta(radice) {
       });
     }
 
-    const elSpese = $('[data-r="spese"]', contenuto);
-    if (elSpese) {
-      const totale = movimentiPeriodo.reduce((s, m) => (m.tipo === 'spesa' ? s + m.importo : s), 0);
-      animaNumero(elSpese, ultimaSpesa ?? totale, totale, euroCompatto);
-      ultimaSpesa = totale;
+    // Anche il totale al centro della ciambella scorre, come le altre cifre.
+    const elTotaleCiambella = $('.cia-tot', contenuto);
+    if (elTotaleCiambella) {
+      const t = totaliPerCategoria(movimentiPeriodo, 'spesa');
+      elTotaleCiambella.dataset.conta = 'ciambella';
+      elTotaleCiambella.dataset.cent = String(t.totale);
+      elTotaleCiambella.dataset.fmt = 'compatto';
     }
+    animaCifre(contenuto, cifreMostrate);
 
     const elBarreSpese = $('[data-r="barre-spese"]', contenuto);
     const elBarreRisparmio = $('[data-r="barre-risparmio"]', contenuto);

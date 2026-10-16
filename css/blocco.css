@@ -16,7 +16,7 @@ html[data-copri] #app, html[data-copri] #strato-pannelli, html[data-copri] #stra
   max-width: var(--larghezza-max);
   margin: 0 auto;
   padding: calc(var(--sp-8) + var(--safe-sopra)) var(--sp-4) calc(var(--sp-4) + var(--safe-sotto));
-  background: var(--sfondo);
+  background: var(--sfondo-sfumato), var(--sfondo);
   overflow-y: auto;
 }
 .blocco [hidden] { display: none !important; }

@@ -4,7 +4,7 @@ import { $ } from '../util/dom.js';
 import { icona } from '../util/icone.js';
 import { euro, euroCompatto, euroArrotondato, euroConSegno, etichettaCiclo, etichettaGiorno, percentuale } from '../util/formato.js';
 import { oggiIso, cicloContenente, cicloPrecedente, cicloSuccessivo, dentroCiclo } from '../util/date.js';
-import { animaNumero } from '../util/animazione.js';
+import { animaCifre, attrCifra } from '../util/animazione.js';
 import { impostazioni } from '../model/impostazioni.js';
 import { movimentiPeriodo } from '../model/movimenti.js';
 import { mappaDelleCategorie, mappaDeiConti, categoriaStipendio } from '../model/catalogo.js';
@@ -14,7 +14,7 @@ import { apriInserimento } from '../components/inserimento.js';
 
 // Stato che sopravvive al cambio di area: tornando su Mese si ritrova lo stesso periodo.
 let ciclo = null;
-let ultimoValoreMostrato = 0;
+const cifreMostrate = new Map(); // ultime cifre viste: la prossima animazione parte da lì (la prima volta da 0)
 
 const SOGLIA_SWIPE = 70;
 
@@ -40,12 +40,13 @@ export function monta(radice) {
   const giornoInizio = () => impostazioni().giornoInizioMese;
   if (!cicloValido(giornoInizio())) ciclo = cicloContenente(oggiIso(), giornoInizio());
 
-  function htmlIndicatore(ind) {
+  function htmlIndicatore(ind, valoreEroe) {
+    const eroe = `<span class="ind-valore" data-r="hero" ${attrCifra('hero', valoreEroe, 'compatto')}>${euroCompatto(valoreEroe)}</span>`;
     if (ind.stato === 'assente') {
       return `
         <section class="scheda indicatore indicatore-assente" aria-label="Indicatore stipendio">
           <p class="ind-et">Uscite del periodo</p>
-          <div class="ind-riga"><span class="ind-valore" data-r="hero"></span></div>
+          <div class="ind-riga">${eroe}</div>
           <button type="button" class="ind-avviso" data-az="registra-stipendio">
             ${icona('circle-alert', 18)}<span>Stipendio non ancora registrato</span><strong>Registralo</strong>
           </button>
@@ -56,28 +57,28 @@ export function monta(radice) {
       <section class="scheda indicatore stato-${ind.stato}" aria-label="Indicatore stipendio">
         <p class="ind-et">${superato ? 'Hai superato di' : 'Ti restano'}</p>
         <div class="ind-riga">
-          <span class="ind-valore" data-r="hero"></span>
-          <span class="ind-di">di ${euroCompatto(ind.stipendio)}</span>
+          ${eroe}
+          <span class="ind-di">di <span ${attrCifra('stipendio', ind.stipendio, 'compatto')}>${euroCompatto(ind.stipendio)}</span></span>
         </div>
         <div class="barra" role="progressbar" aria-valuemin="0" aria-valuemax="100"
              aria-valuenow="${Math.min(100, Math.round(ind.percentuale))}" aria-label="Uscite rispetto allo stipendio">
           <div class="barra-riempi" data-larghezza="${Math.min(100, ind.percentuale).toFixed(1)}"></div>
         </div>
-        <p class="ind-sotto">Uscite ${euroCompatto(ind.uscite)} (${percentuale(ind.percentuale)})</p>
+        <p class="ind-sotto">Uscite <span ${attrCifra('uscite', ind.uscite, 'compatto')}>${euroCompatto(ind.uscite)}</span> (${percentuale(ind.percentuale)})</p>
       </section>`;
   }
 
   function htmlRiepilogo(t) {
-    const scheda = (et, valore, nomeIcona, classe) => `
+    const scheda = (et, chiave, cent, nomeIcona, classe) => `
       <div class="scheda mini ${classe}">
         <span class="mini-et">${icona(nomeIcona, 16)}${et}</span>
-        <span class="mini-valore">${valore}</span>
+        <span class="mini-valore" ${attrCifra(chiave, cent, 'arrotondato')}>${euroArrotondato(cent)}</span>
       </div>`;
     return `
       <div class="riepilogo" aria-label="Riepilogo del periodo">
-        ${scheda('Entrate', euroArrotondato(t.entrate), 'arrow-down-left', 'mini-entrate')}
-        ${scheda('Spese', euroArrotondato(t.spese), 'arrow-up-right', '')}
-        ${scheda('Risparmio', euroArrotondato(t.risparmio), 'piggy-bank', t.risparmio < 0 ? 'mini-negativo' : '')}
+        ${scheda('Entrate', 'entrate', t.entrate, 'arrow-down-left', 'tono-entrata')}
+        ${scheda('Spese', 'spese', t.spese, 'arrow-up-right', 'tono-spesa')}
+        ${scheda('Risparmio', 'risparmio', t.risparmio, 'piggy-bank', t.risparmio < 0 ? 'tono-negativo' : 'tono-risparmio')}
       </div>`;
   }
 
@@ -115,7 +116,7 @@ export function monta(radice) {
 
     movimentiMostrati = new Map(movimenti.map((m) => [m.id, m]));
     titolo.textContent = etichettaCiclo(corrente, giornoInizio());
-    contenuto.innerHTML = htmlIndicatore(ind) + htmlRiepilogo(totaliPeriodo(movimenti))
+    contenuto.innerHTML = htmlIndicatore(ind, valoreEroe) + htmlRiepilogo(totaliPeriodo(movimenti))
       + htmlElenco(raggruppaPerGiorno(movimenti), oggi, evidenziaId);
 
     contenuto.classList.remove('slide-avanti', 'slide-indietro');
@@ -124,8 +125,7 @@ export function monta(radice) {
       contenuto.classList.add(direzione > 0 ? 'slide-avanti' : 'slide-indietro');
     }
 
-    animaNumero($('[data-r="hero"]', contenuto), ultimoValoreMostrato, valoreEroe, euroCompatto);
-    ultimoValoreMostrato = valoreEroe;
+    animaCifre(contenuto, cifreMostrate);
 
     // La barra parte da 0 e si riempie (la transizione CSS fa il resto).
     const barra = $('.barra-riempi', contenuto);

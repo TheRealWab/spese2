@@ -220,7 +220,7 @@ export function apriEsportaBackup() {
     const file = stato.esito?.condivisibile;
     if (!file) return;
     try {
-      await navigator.share({ files: [file], title: 'Backup di Spese 2.0' });
+      await navigator.share({ files: [file], title: 'Backup di Wallet' });
     } catch (e) {
       if (e?.name !== 'AbortError') console.warn('Condivisione non riuscita:', e);
     }

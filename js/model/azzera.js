@@ -1,4 +1,4 @@
-// Cancella tutti i dati di Spese 2.0 su questo telefono. Serve a chi ha dimenticato il PIN: l'unico modo
+// Cancella tutti i dati di Wallet su questo telefono. Serve a chi ha dimenticato il PIN: l'unico modo
 // di rientrare è ripartire da zero e ripristinare un backup cifrato.
 
 import { sostituisciArchivi } from '../db.js';

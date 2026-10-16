@@ -81,9 +81,9 @@ export function leggiIntestazione(testo, { minimoIterazioni = MINIMO_ITERAZIONI 
   try {
     file = JSON.parse(testo);
   } catch {
-    throw new ErroreBackup('Il file non è leggibile: non sembra un backup di Spese 2.0.');
+    throw new ErroreBackup('Il file non è leggibile: non sembra un backup di Wallet.');
   }
-  if (file?.formato !== FORMATO) throw new ErroreBackup('Questo file non è un backup di Spese 2.0.');
+  if (file?.formato !== FORMATO) throw new ErroreBackup('Questo file non è un backup di Wallet.');
   if (file.versione > VERSIONE_FORMATO) throw new ErroreBackup('Il backup è stato creato da una versione più recente dell\'app.');
   const c = file.cifratura;
   const iterazioniOk = Number.isInteger(c?.iterazioni) && c.iterazioni >= minimoIterazioni && c.iterazioni <= MASSIMO_ITERAZIONI;
@@ -118,7 +118,7 @@ export async function decifra(testo, password, opzioni = {}) {
 
 /** Lancia ErroreBackup se i dati non hanno la forma attesa (meglio rifiutare che ripristinare dati storti). */
 export function validaDatiBackup(dati) {
-  if (dati?.app !== 'spese2') throw new ErroreBackup('Il backup non contiene dati di Spese 2.0.');
+  if (dati?.app !== 'spese2') throw new ErroreBackup('Il backup non contiene dati di Wallet.');
   for (const nome of ARCHIVI_BACKUP) {
     if (!Array.isArray(dati[nome])) throw new ErroreBackup(`Nel backup manca la sezione «${nome}».`);
   }
@@ -154,7 +154,7 @@ export function riepilogoBackup(dati) {
   };
 }
 
-export const nomeFileBackup = (oggi) => `spese-backup-${oggi}.json`;
+export const nomeFileBackup = (oggi) => `wallet-backup-${oggi}.json`;
 
 // ---- Ultimo backup ----
 

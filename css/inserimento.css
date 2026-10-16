@@ -53,6 +53,9 @@
 @keyframes cursore { to { visibility: hidden; } }
 .ins-valuta { font-size: 1.75rem; font-weight: 600; color: var(--testo-2); }
 .ins[data-tipo="entrata"] .ins-valore:not(.vuoto) { color: var(--verde); }
+.ins[data-tipo="spesa"] .ins-valore:not(.vuoto) { color: var(--spesa); }
+.ins-tipi [data-tipo="spesa"][aria-pressed="true"] { color: var(--spesa); }
+.ins-tipi [data-tipo="entrata"][aria-pressed="true"] { color: var(--verde); }
 
 /* ---- Corpo: griglia categorie o trasferimento ---- */
 .ins-corpo {

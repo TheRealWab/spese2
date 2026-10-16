@@ -10,6 +10,7 @@ import { esc } from '../util/dom.js';
 import { icona, cerchioIcona } from '../util/icone.js';
 import { euroConSegno, etichettaGiorno, percentualeConSegno, dataBreve } from '../util/formato.js';
 import { oggiIso } from '../util/date.js';
+import { animaCifre, attrCifra } from '../util/animazione.js';
 import { importiNascosti, mostraImporto, MASCHERA_IMPORTO } from '../util/importi-privati.js';
 import { tutti } from '../db.js';
 import { contoPerId } from '../model/catalogo.js';
@@ -24,6 +25,7 @@ const classeVariazione = (cent) => (cent > 0 ? 'pt-su' : (cent < 0 ? 'pt-giu' : 
 /** @param {{contoId: string}} opzioni */
 export function apriDettaglioConto({ contoId }) {
   const stato = { movimenti: [], valori: [], mostrati: PAGINA };
+  const cifre = new Map(); // ultime cifre viste, per far scorrere i numeri quando cambiano
   let radice = null;
 
   const ctrl = apriPannello({
@@ -75,7 +77,7 @@ export function apriDettaglioConto({ contoId }) {
             ${cerchioIcona(conto.icona, conto.colore, 56)}
             <div class="ct-hero-testo">
               <p class="ind-et">${investimento ? 'Valore attuale' : 'Saldo'}${conto.archiviato ? ' · archiviato' : ''}</p>
-              <span class="ind-valore ct-hero-valore ${saldo < 0 ? 'pt-giu' : ''}">${esc(mostraImporto(saldo))}</span>
+              <span class="ind-valore ct-hero-valore ${saldo < 0 ? 'pt-giu' : ''}" ${attrCifra('saldo', saldo, 'euro', true)}>${esc(mostraImporto(saldo))}</span>
               <p class="ind-sotto">${esc(ETICHETTA_TIPO_CONTO[conto.tipo] ?? '')} · ${elenco.length === 1 ? '1 movimento' : `${elenco.length} movimenti`}</p>
             </div>
           </section>
@@ -84,6 +86,7 @@ export function apriDettaglioConto({ contoId }) {
         </div>
       </div>`;
     if (posizione) radice.querySelector('.flusso-corpo').scrollTop = posizione;
+    animaCifre(radice, cifre);
   }
 
   function htmlInvestimento(storia, oggi) {
@@ -94,9 +97,9 @@ export function apriDettaglioConto({ contoId }) {
     return `
       <section class="scheda pt-inv">
         <dl class="pt-inv-dati">
-          <div><dt>Versato</dt><dd>${esc(mostraImporto(r.versato))}</dd></div>
-          <div><dt>Valore attuale</dt><dd>${esc(mostraImporto(r.valore))}</dd></div>
-          <div class="${classeVariazione(r.guadagno)}"><dt>Guadagno</dt><dd>${esc(importiNascosti() ? MASCHERA_IMPORTO : euroConSegno(r.guadagno))}${perc ? `<span class="pt-perc">${esc(perc)}</span>` : ''}</dd></div>
+          <div><dt>Versato</dt><dd ${attrCifra('versato', r.versato, 'euro', true)}>${esc(mostraImporto(r.versato))}</dd></div>
+          <div><dt>Valore attuale</dt><dd ${attrCifra('valore', r.valore, 'euro', true)}>${esc(mostraImporto(r.valore))}</dd></div>
+          <div class="${classeVariazione(r.guadagno)}"><dt>Guadagno</dt><dd><span ${attrCifra('guadagno', r.guadagno, 'segno', true)}>${esc(importiNascosti() ? MASCHERA_IMPORTO : euroConSegno(r.guadagno))}</span>${perc ? `<span class="pt-perc">${esc(perc)}</span>` : ''}</dd></div>
         </dl>
         <div class="pt-inv-piede">
           <span class="pt-aggiornato ${agg.vecchio ? 'vecchio' : ''}">${icona('clock', 14)} ${esc(agg.testo)}</span>

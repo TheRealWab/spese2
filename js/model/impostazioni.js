@@ -1,6 +1,8 @@
 // Impostazioni dell'app (SPEC §4 "Impostazioni"): un unico record nell'archivio `impostazioni`.
 
 import { leggi, salva } from '../db.js';
+import { applicaSfondo } from '../util/sfondo-app.js';
+import { PROFILO_PREDEFINITO, SFONDO_PREDEFINITO, normalizzaProfilo, normalizzaSfondo } from './aspetto.js';
 
 export const ID_IMPOSTAZIONI = 'principale';
 const CHIAVE_TEMA = 'spese2_tema'; // copia in localStorage: leggibile subito, prima del primo disegno
@@ -14,10 +16,12 @@ export const PREDEFINITE = {
   nascondiImportiPatrimonio: false, // occhio nell'area Patrimonio: copre gli importi con dei pallini
   ultimoBackup: null,
   sicurezza: { attiva: false },
+  profilo: PROFILO_PREDEFINITO, // { nome, foto } (model/aspetto.js)
+  sfondo: SFONDO_PREDEFINITO, // { id, foto, attenua } (model/aspetto.js)
 };
 
 // Colori di sfondo per la barra di sistema del telefono (stessi valori di --sfondo in tokens.css).
-const COLORE_BARRA = { chiaro: '#f3f4f8', scuro: '#0a0b0f' };
+const COLORE_BARRA = { chiaro: '#eaecf3', scuro: '#07080b' };
 
 let correnti = { ...PREDEFINITE };
 
@@ -26,6 +30,8 @@ export const impostazioni = () => correnti;
 export async function caricaImpostazioni() {
   const salvate = await leggi('impostazioni', ID_IMPOSTAZIONI);
   correnti = { ...PREDEFINITE, ...(salvate ?? {}) };
+  correnti.profilo = normalizzaProfilo(correnti.profilo);
+  correnti.sfondo = normalizzaSfondo(correnti.sfondo);
   return correnti;
 }
 
@@ -35,6 +41,7 @@ export async function salvaImpostazioni(parziale) {
   await salva('impostazioni', nuove);
   correnti = nuove;
   if ('tema' in parziale) applicaTema(nuove.tema);
+  if ('sfondo' in parziale) applicaSfondo(nuove.sfondo);
   document.dispatchEvent(new CustomEvent('spese2:impostazioni', { detail: parziale }));
 }
 

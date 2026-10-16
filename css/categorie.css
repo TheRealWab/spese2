@@ -5,7 +5,10 @@
 .sel-modi { margin-bottom: var(--sp-3); }
 .mese-testata .btn-icona:disabled { opacity: 0.3; }
 
-.ct-totale .ind-valore { font-size: var(--t-hero); }
+.ct-totale .ind-valore { font-size: var(--t-hero); color: var(--tono, var(--testo)); }
+.ct-totale .ind-et { color: var(--tono, var(--testo-2)); }
+.ct-tipo button[data-tipo="spesa"][aria-pressed="true"] { color: var(--spesa); }
+.ct-tipo button[data-tipo="entrata"][aria-pressed="true"] { color: var(--verde); }
 
 /* ---- Elenco categorie ---- */
 .lista-cat { overflow: hidden; }
@@ -41,6 +44,7 @@
 .ct-hero { display: flex; align-items: center; gap: var(--sp-4); padding: var(--sp-5); }
 .ct-hero-testo { display: grid; gap: 2px; min-width: 0; }
 .ct-hero-valore { font-size: var(--t-xl); line-height: 1.15; }
+.ct-hero-valore.tono-spesa, .ct-hero-valore.tono-entrata { color: var(--tono); }
 
 .ct-note { display: grid; gap: var(--sp-3); padding: var(--sp-4); }
 .ct-note-titolo { font-size: var(--t-s); font-weight: 650; color: var(--testo-2); }

@@ -1,0 +1,118 @@
+/* Profilo, scelta dello sfondo, marchio (nome dell'app con la W evidenziata). */
+
+/* ---- Marchio: la W nel viola dell'app ---- */
+.marchio-w { color: var(--accento); font-weight: 800; }
+
+/* ---- Cerchio del profilo ---- */
+.avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--dim, 64px);
+  height: var(--dim, 64px);
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--accento-tenue);
+  color: var(--accento-forte);
+  box-shadow: var(--ombra-rialzo), 0 0 0 2px var(--scheda);
+}
+.avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.avatar-lettere { font-weight: 700; letter-spacing: 0.02em; line-height: 1; }
+
+/* ---- Scheda in cima ad Altro ---- */
+.profilo-scheda {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  width: 100%;
+  padding: var(--sp-4) var(--sp-4) var(--sp-4) var(--sp-5);
+  text-align: left;
+}
+.profilo-scheda + .gruppo { margin-top: var(--sp-5); }
+.profilo-scheda:active { transform: scale(0.99); }
+.profilo-scheda { transition: transform var(--dur-1) var(--ease); }
+.profilo-testo { display: grid; flex: 1; gap: 2px; min-width: 0; }
+.profilo-nome { overflow: hidden; font-size: var(--t-l); font-weight: 700; letter-spacing: -0.01em; text-overflow: ellipsis; white-space: nowrap; }
+.profilo-sotto { font-size: var(--t-s); color: var(--testo-2); }
+.profilo-invito { color: var(--accento-forte); font-weight: 650; }
+
+/* ---- Editor del profilo ---- */
+.pr-foto { display: grid; justify-items: center; gap: var(--sp-4); padding: var(--sp-4) 0 var(--sp-2); }
+.pr-foto-azioni { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-2); }
+.chip:has(.solo-sr:focus-visible) { outline: 2px solid var(--accento); outline-offset: 2px; }
+
+.pr-ritaglio {
+  position: relative;
+  justify-self: center;
+  width: var(--lato);
+  height: var(--lato);
+  max-width: 100%;
+  border-radius: var(--r-l);
+  overflow: hidden;
+  background: var(--scheda-3);
+  box-shadow: var(--ombra-incasso);
+  touch-action: none; /* il dito sposta la foto, non la pagina */
+}
+.pr-ritaglio canvas { display: block; width: 100%; height: 100%; cursor: grab; }
+/* Il cerchio che resta visibile: fuori dal cerchio la foto si oscura */
+.pr-maschera {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle closest-side, transparent 98%, rgb(0 0 0 / 0.55) 100%);
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 0.25);
+  pointer-events: none;
+}
+.pr-zoom { width: 100%; accent-color: var(--accento); min-height: var(--tocco); }
+
+/* ---- Scelta dello sfondo ---- */
+.sf-griglia { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-3); }
+.sf-tessera { display: grid; gap: 6px; justify-items: center; min-width: 0; padding: 0; text-align: center; }
+.sf-anteprima {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--r-m);
+  background: var(--s, none), var(--sfondo);
+  background-size: cover;
+  background-position: center;
+  box-shadow: var(--ombra);
+  transition: transform var(--dur-1) var(--ease), box-shadow var(--dur-1);
+}
+.sf-tessera:active .sf-anteprima { transform: scale(0.97); }
+.sf-tessera.scelta .sf-anteprima { box-shadow: var(--ombra), 0 0 0 3px var(--accento); }
+.sf-spunta {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accento);
+  color: var(--accento-testo);
+}
+.sf-nome { font-size: var(--t-xs); font-weight: 600; color: var(--testo-2); }
+.sf-tessera.scelta .sf-nome { color: var(--testo); }
+.sf-carica { justify-self: start; }
+
+/* ---- Frase nella schermata di blocco ---- */
+.blocco-frase { display: grid; gap: 4px; max-width: 30ch; margin: 0 auto; padding: 0; text-align: center; }
+.blocco-frase figcaption { margin: 0; }
+.blocco-frase blockquote { margin: 0; }
+.blocco-frase q {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-size: var(--t-s);
+  line-height: 1.5;
+  color: var(--testo-2);
+  quotes: "«" "»";
+  text-wrap: balance;
+}
+.blocco-frase cite { font-size: var(--t-xs); font-style: normal; color: var(--testo-3); }
+
+/* ---- Firma in fondo ad Altro ---- */
+.creatore { margin-top: var(--sp-6); text-align: center; font-size: var(--t-s); color: var(--testo-3); }
+.creatore strong { color: var(--testo-2); font-weight: 700; letter-spacing: 0.04em; }
