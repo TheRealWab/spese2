@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   SFONDI, SFONDO_PREDEFINITO, ID_SFONDO_FOTO, ATTENUA_MASSIMA, LUNGHEZZA_MASSIMA_NOME,
-  fotoValida, normalizzaSfondo, cssSfondo, nomeSfondo, normalizzaNome, normalizzaProfilo, iniziali, descriviRiepilogo,
+  fotoValida, normalizzaSfondo, cssSfondo, nomeSfondo, normalizzaNome, normalizzaProfilo, iniziali, primoAvvioStimato,
   riquadroQuadrato, aspettoDopoRipristino,
 } from '../js/model/aspetto.js';
 import { pacchettoDati } from '../js/model/backup.js';
@@ -68,10 +68,15 @@ test('il nome del profilo: spazi sistemati, lunghezza limitata, iniziali per il 
   assert.deepEqual(normalizzaProfilo({ nome: ' Ale ', foto: 'no' }), { nome: 'Ale', foto: null });
 });
 
-test('la riga sotto il nome, con i singolari giusti', () => {
-  assert.equal(descriviRiepilogo({ movimenti: 214, conti: 3 }), '214 movimenti · 3 conti');
-  assert.equal(descriviRiepilogo({ movimenti: 1, conti: 1 }), '1 movimento · 1 conto');
-  assert.equal(descriviRiepilogo({ movimenti: 0, conti: 2 }), '0 movimenti · 2 conti');
+test('"Attivo dal": il giorno del primo movimento creato qui, senza contare quelli importati; altrimenti oggi', () => {
+  const oggi = '2026-10-16';
+  const creati = [{ creatoIl: '2026-10-14T09:30:00.000Z' }, { creatoIl: '2026-10-15T18:00:00.000Z' }];
+  assert.equal(primoAvvioStimato(creati, oggi), '2026-10-14');
+  // un movimento importato dalla vecchia app ha la data di allora: non è l'inizio dell'uso di questa app
+  assert.equal(primoAvvioStimato([{ creatoIl: '2024-01-05T10:00:00.000Z', origineId: 'vecchio-1' }, ...creati], oggi), '2026-10-14');
+  assert.equal(primoAvvioStimato([], oggi), oggi);
+  assert.equal(primoAvvioStimato([{ creatoIl: '2030-01-01T00:00:00.000Z' }], oggi), oggi); // data nel futuro: si ignora
+  assert.equal(primoAvvioStimato([{ id: 'x' }], oggi), oggi); // movimento senza data di creazione
 });
 
 test('il ritaglio quadrato resta sempre dentro la foto e ingrandire stringe il riquadro', () => {

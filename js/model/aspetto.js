@@ -102,11 +102,13 @@ export function iniziali(nome) {
   return (parole.length === 1 ? parole[0].slice(0, 1) : parole[0][0] + parole[parole.length - 1][0]).toLocaleUpperCase('it-IT');
 }
 
-const plurale = (n, uno, molti) => `${n} ${n === 1 ? uno : molti}`;
-
-/** La riga sotto il nome, per esempio «214 movimenti · 3 conti». */
-export function descriviRiepilogo({ movimenti, conti }) {
-  return `${plurale(movimenti, 'movimento', 'movimenti')} · ${plurale(conti, 'conto', 'conti')}`;
+/**
+ * Da quando si usa l'app, per chi non ha ancora una data salvata: il giorno del primo movimento creato qui
+ * (i movimenti importati dalla vecchia app non contano: hanno la data della vecchia app), oppure oggi.
+ */
+export function primoAvvioStimato(movimenti, oggi) {
+  const giorni = movimenti.filter((m) => !m.origineId && typeof m.creatoIl === 'string').map((m) => m.creatoIl.slice(0, 10)).sort();
+  return giorni.length && giorni[0] < oggi ? giorni[0] : oggi;
 }
 
 /**

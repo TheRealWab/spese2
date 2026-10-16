@@ -1,8 +1,9 @@
 // Impostazioni dell'app (SPEC §4 "Impostazioni"): un unico record nell'archivio `impostazioni`.
 
-import { leggi, salva } from '../db.js';
+import { leggi, salva, tutti } from '../db.js';
+import { dataValida } from '../util/date.js';
 import { applicaSfondo } from '../util/sfondo-app.js';
-import { PROFILO_PREDEFINITO, SFONDO_PREDEFINITO, normalizzaProfilo, normalizzaSfondo } from './aspetto.js';
+import { PROFILO_PREDEFINITO, SFONDO_PREDEFINITO, normalizzaProfilo, normalizzaSfondo, primoAvvioStimato } from './aspetto.js';
 
 export const ID_IMPOSTAZIONI = 'principale';
 const CHIAVE_TEMA = 'spese2_tema'; // copia in localStorage: leggibile subito, prima del primo disegno
@@ -16,6 +17,7 @@ export const PREDEFINITE = {
   nascondiImportiPatrimonio: false, // occhio nell'area Patrimonio: copre gli importi con dei pallini
   ultimoBackup: null,
   sicurezza: { attiva: false },
+  primoAvvio: null, // giorno in cui si è iniziato a usare l'app (per «Attivo dal…»)
   profilo: PROFILO_PREDEFINITO, // { nome, foto } (model/aspetto.js)
   sfondo: SFONDO_PREDEFINITO, // { id, foto, attenua } (model/aspetto.js)
 };
@@ -33,6 +35,12 @@ export async function caricaImpostazioni() {
   correnti.profilo = normalizzaProfilo(correnti.profilo);
   correnti.sfondo = normalizzaSfondo(correnti.sfondo);
   return correnti;
+}
+
+/** Se non c'è ancora, salva il giorno di primo avvio (vedi primoAvvioStimato). */
+export async function assicuraPrimoAvvio(oggi) {
+  if (dataValida(correnti.primoAvvio)) return;
+  await salvaImpostazioni({ primoAvvio: primoAvvioStimato(await tutti('movimenti'), oggi) });
 }
 
 /** Aggiorna uno o più valori, li salva e avvisa le viste. */

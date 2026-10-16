@@ -2,7 +2,7 @@
 
 import { apriDb } from './db.js';
 import { eseguiSeedSeServe } from './model/seed.js';
-import { caricaImpostazioni, impostazioni, applicaTema, seguiTemaDiSistema } from './model/impostazioni.js';
+import { caricaImpostazioni, impostazioni, applicaTema, seguiTemaDiSistema, assicuraPrimoAvvio } from './model/impostazioni.js';
 import { applicaSfondo } from './util/sfondo-app.js';
 import { caricaCatalogo } from './model/catalogo.js';
 import { oggiIso } from './util/date.js';
@@ -297,6 +297,7 @@ async function avvia() {
     await apriDb();
     await eseguiSeedSeServe(oggiIso());
     await caricaImpostazioni();
+    await assicuraPrimoAvvio(oggiIso());
     await caricaCatalogo();
   } catch (errore) {
     mostraErrore(errore);
