@@ -199,3 +199,22 @@ export function movimentiDelConto(movimenti, contoId) {
     .filter((m) => m.contoId === contoId || m.contoDestinazioneId === contoId)
     .sort((a, b) => (a.data === b.data ? (b.creatoIl ?? '').localeCompare(a.creatoIl ?? '') : (a.data < b.data ? 1 : -1)));
 }
+
+/**
+ * "Il saldo non torna?": dato il saldo che DOVREBBE risultare oggi, cerca le date del saldo iniziale che lo producono,
+ * tenendo fermo il saldo iniziale scritto. Il saldo di oggi dipende solo da quali movimenti restano dopo la data, quindi
+ * basta provare le date dei movimenti del conto (e il giorno prima del più vecchio).
+ * Restituisce { esatti: [{ data, saldo }], vicini: [{ data, saldo }] }: `esatti` danno proprio quel saldo (dalla data più
+ * recente), `vicini` sono i tre più vicini se nessuno è esatto.
+ */
+export function dateCompatibili(conto, movimenti, valori, obiettivo, oggi) {
+  const date = [...new Set(movimenti.filter((m) => effettoMovimento(m, conto.id) !== 0).map((m) => m.data))].sort();
+  if (!date.length) return { esatti: [], vicini: [] };
+  const candidate = [aggiungiGiorni(date[0], -1), ...date];
+  const prova = { ...conto };
+  const storia = creaStoriaConto(prova, movimenti, valori); // legge la data di `prova` ogni volta: la si cambia a ogni giro
+  const risultati = candidate.map((data) => { prova.dataSaldoIniziale = data; return { data, saldo: storia.saldoAl(oggi) }; });
+  const esatti = risultati.filter((r) => r.saldo === obiettivo).sort((a, b) => (a.data < b.data ? 1 : -1));
+  const vicini = esatti.length ? [] : [...risultati].sort((a, b) => Math.abs(a.saldo - obiettivo) - Math.abs(b.saldo - obiettivo)).slice(0, 3);
+  return { esatti, vicini };
+}

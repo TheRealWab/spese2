@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  effettoMovimento, movimentiEsclusi, ripartizioneInvestito, creaStoriaConto, creaStorie, patrimonioAl, riepilogoInvestimento, variazioneRispettoAMeseFa,
+  effettoMovimento, movimentiEsclusi, dateCompatibili, ripartizioneInvestito, creaStoriaConto, creaStorie, patrimonioAl, riepilogoInvestimento, variazioneRispettoAMeseFa,
   dateCampione, serieAndamento, primaDataConDati, intervalloGrafico, etichettaAggiornamento, movimentiDelConto,
 } from '../js/model/patrimonio.js';
 import {
@@ -296,4 +296,30 @@ test('movimentiEsclusi: quelli importati dalla vecchia app (origineId) sono già
   const dellApp = spesa('p', 800, '2026-10-14'); // registrato nell'app, ma del giorno del saldo: non conta e va segnalato
   assert.deepEqual(movimentiEsclusi(c, [importato, dellApp]).map((m) => m.importo), [800]);
   assert.deepEqual(movimentiEsclusi(c, [importato]), []);
+});
+
+test('dateCompatibili: ritrova la data del saldo iniziale che dà il saldo giusto', () => {
+  // Il conto aveva saldo iniziale 100.000 a fine giornata del 10/03; poi la data è stata spostata per errore al 01/01.
+  const movimenti = [
+    spesa('a', 5000, '2026-02-10'), entrata('a', 20000, '2026-02-20'), // già dentro il saldo iniziale
+    spesa('a', 3000, '2026-03-12'), spesa('a', 1000, '2026-03-20'), entrata('a', 50000, '2026-04-01'),
+  ];
+  const giusto = 100000 - 3000 - 1000 + 50000; // i soli movimenti dopo il 10/03
+  const sbagliato = conto('a', 'conto', 100000, '2026-01-01');
+  const r = dateCompatibili(sbagliato, movimenti, [], giusto, '2026-05-01');
+  assert.ok(r.esatti.length >= 1);
+  assert.equal(r.esatti[0].data, '2026-02-20'); // l'ultimo movimento già compreso nel saldo: da qui in poi il saldo è quello giusto
+  assert.equal(r.esatti[0].saldo, giusto);
+  assert.deepEqual(r.vicini, []);
+  // con la data trovata il saldo coincide davvero
+  assert.equal(creaStoriaConto({ ...sbagliato, dataSaldoIniziale: r.esatti[0].data }, movimenti).saldoAl('2026-05-01'), giusto);
+});
+
+test('dateCompatibili: se nessuna data dà esattamente quella cifra propone le più vicine; senza movimenti non propone nulla', () => {
+  const movimenti = [spesa('a', 1000, '2026-02-10'), spesa('a', 2000, '2026-03-10')];
+  const r = dateCompatibili(conto('a', 'conto', 50000, '2026-01-01'), movimenti, [], 12345, '2026-05-01');
+  assert.deepEqual(r.esatti, []);
+  assert.equal(r.vicini.length, 3);
+  assert.ok(Math.abs(r.vicini[0].saldo - 12345) <= Math.abs(r.vicini[1].saldo - 12345));
+  assert.deepEqual(dateCompatibili(conto('a', 'conto', 50000, '2026-01-01'), [], [], 1, '2026-05-01'), { esatti: [], vicini: [] });
 });

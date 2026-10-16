@@ -8,7 +8,7 @@ import { mostraToast } from './toast.js';
 import { esc } from '../util/dom.js';
 import { icona, cerchioIcona } from '../util/icone.js';
 import { oggiIso, aggiungiGiorni, dataValida } from '../util/date.js';
-import { euro, leggiImporto, centesimiInDigitato } from '../util/formato.js';
+import { euro, dataBreve, leggiImporto, centesimiInDigitato } from '../util/formato.js';
 import { tutti } from '../db.js';
 import { impostazioni } from '../model/impostazioni.js';
 import { tuttiIContiInMemoria, contoPerId } from '../model/catalogo.js';
@@ -16,7 +16,7 @@ import { COLORI_CATEGORIA } from '../model/palette.js';
 import {
   TIPI_CONTO, ETICHETTA_TIPO_CONTO, LUNGHEZZA_MAX_NOME_CONTO, ICONA_PREDEFINITA_CONTO, coloreContoSuggerito, puoArchiviareConto,
 } from '../model/conti.js';
-import { creaStoriaConto, movimentiEsclusi } from '../model/patrimonio.js';
+import { creaStoriaConto, movimentiEsclusi, dateCompatibili } from '../model/patrimonio.js';
 import { ErroreConto, creaConto, aggiornaConto, archiviaConto, tuttiIValori } from '../model/conti-db.js';
 
 const ETICHETTA_COLORE = {
@@ -43,6 +43,8 @@ export function apriEditorConto({ contoId = null } = {}) {
     salvando: false,
     movimentiConto: [], // i movimenti del conto (per avvisare di quelli che il saldo iniziale non conta)
     valori: [], // i valori dell'investimento, per l'anteprima del saldo
+    obiettivo: '', // "il saldo che dovrebbe risultare oggi", per cercare la data giusta
+    trovate: null, // risultato della ricerca: { esatti, vicini } oppure null
   };
   let radice = null;
 
@@ -56,6 +58,7 @@ export function apriEditorConto({ contoId = null } = {}) {
         if (e.target.id === 'ec-nome') stato.nome = e.target.value;
         else if (e.target.id === 'ec-saldo') { stato.saldo = e.target.value; aggiornaAvvisi(); }
         else if (e.target.id === 'ec-data') { stato.data = e.target.value; aggiornaAvvisi(); }
+        else if (e.target.id === 'ec-obiettivo') stato.obiettivo = e.target.value;
         else return;
         if (stato.errore) segnalaErrore('');
       });
@@ -122,6 +125,7 @@ export function apriEditorConto({ contoId = null } = {}) {
               <p class="nota-fondo">I movimenti dei giorni dopo questa data si sommano al saldo iniziale; quelli di questo giorno o precedenti no, perché il saldo li comprende già.${nuovo ? ' Per un conto nuovo la data è ieri, così contano anche i movimenti di oggi.' : ''} Il saldo può essere negativo (carta di credito, scoperto).</p>
               ${nuovo ? '' : '<p class="ec-anteprima" role="status" aria-live="polite" data-r="anteprima-saldo"></p>'}
               <p class="flusso-errore" role="status" data-r="avviso-data" hidden>${icona('triangle-alert', 18)}<span></span></p>
+              ${nuovo ? '' : htmlTrovaData()}
             </div>
           </section>
 
@@ -150,6 +154,43 @@ export function apriEditorConto({ contoId = null } = {}) {
         </footer>
       </div>`;
     aggiornaAvvisi();
+  }
+
+  /** «Il saldo non torna?»: si scrive il saldo giusto di oggi e l'app cerca la data del saldo iniziale che lo produce. */
+  function htmlTrovaData() {
+    const t = stato.trovate;
+    let risultati = '';
+    if (t) {
+      const voce = (r) => `<button type="button" class="riga-lista" data-az="usa-data" data-d="${esc(r.data)}"><span class="riga-testo"><span class="riga-titolo">${esc(dataBreve(r.data))}</span><span class="riga-sotto">Saldo di oggi: ${esc(euro(r.saldo))}</span></span><span class="badge">Usa</span></button>`;
+      if (t.esatti.length) {
+        risultati = `<p class="riga-sotto">Queste date danno proprio ${esc(euro(leggiImporto(stato.obiettivo) ?? 0))}. Tocca quella che ti sembra giusta (di solito la più recente):</p><div class="scheda">${t.esatti.slice(0, 5).map(voce).join('')}</div>`;
+      } else if (t.vicini.length) {
+        risultati = `<p class="riga-sotto">Nessuna data dà esattamente quella cifra, forse è cambiato anche il saldo iniziale. Le più vicine:</p><div class="scheda">${t.vicini.map(voce).join('')}</div>`;
+      } else {
+        risultati = '<p class="riga-sotto">Questo conto non ha ancora movimenti: non c\'è nessuna data da cercare.</p>';
+      }
+    }
+    return `
+      <div class="ec-trova">
+        <p class="riga-titolo">Il saldo non torna?</p>
+        <p class="riga-sotto">Scrivi quanto dovrebbe risultare oggi (per esempio quello della tua banca) e cerco la data giusta.</p>
+        <div class="ec-trova-riga">
+          <input id="ec-obiettivo" class="campo-testo" type="text" inputmode="decimal" placeholder="Per esempio 17.945,00" value="${esc(stato.obiettivo)}">
+          <button type="button" class="chip" data-az="trova-data">${icona('search', 16)} Trova la data</button>
+        </div>
+        ${risultati}
+      </div>`;
+  }
+
+  function trovaData() {
+    ricorda();
+    const obiettivo = leggiImporto(stato.obiettivo);
+    if (obiettivo === null) { segnalaErrore('Scrivi il saldo giusto, per esempio 17.945,00.'); return; }
+    const saldoIniziale = stato.saldo.trim() === '' ? 0 : leggiImporto(stato.saldo);
+    if (saldoIniziale === null) { segnalaErrore('Il saldo iniziale non è valido.'); return; }
+    stato.trovate = dateCompatibili({ ...esistente, saldoIniziale }, stato.movimentiConto, stato.valori, obiettivo, oggi);
+    stato.errore = '';
+    disegna();
   }
 
   function aggiornaAvvisi() {
@@ -216,8 +257,13 @@ export function apriEditorConto({ contoId = null } = {}) {
     radice.querySelector('[data-az="salva"]')?.setAttribute('disabled', '');
     try {
       if (esistente) {
+        const prima = { nome: esistente.nome, icona: esistente.icona, colore: esistente.colore, saldoIniziale: esistente.saldoIniziale, dataSaldoIniziale: esistente.dataSaldoIniziale };
         await aggiornaConto(esistente.id, { nome: stato.nome, icona: stato.icona, colore: stato.colore, saldoIniziale, dataSaldoIniziale: stato.data });
-        mostraToast('Modifiche salvate');
+        // Se cambiano saldo o data (si sposta il saldo del conto) si può annullare: i valori di prima tornano subito.
+        const cambiato = prima.saldoIniziale !== saldoIniziale || prima.dataSaldoIniziale !== stato.data;
+        mostraToast('Modifiche salvate', cambiato
+          ? { durata: 9000, azione: { etichetta: 'Annulla', alClick: () => aggiornaConto(esistente.id, prima).then(() => mostraToast('Saldo riportato a com\'era')).catch(console.error) } }
+          : {});
         c.chiudi({ azione: 'modificato', id: esistente.id });
       } else {
         const creato = await creaConto({ nome: stato.nome, tipo: stato.tipo, icona: stato.icona, colore: stato.colore, saldoIniziale, dataSaldoIniziale: stato.data });
@@ -283,6 +329,15 @@ export function apriEditorConto({ contoId = null } = {}) {
         if (scelta) { stato.icona = scelta; disegna(); }
         break;
       }
+      case 'trova-data': trovaData(); break;
+      case 'usa-data': {
+        ricorda();
+        stato.data = e.target.closest('[data-d]').dataset.d;
+        stato.trovate = null;
+        disegna();
+        mostraToast('Data impostata: controlla il saldo qui sopra, poi salva');
+        break;
+      }
       case 'archivia': await archivia(c, true); break;
       case 'ripristina': await archivia(c, false); break;
       default: break;
@@ -291,7 +346,7 @@ export function apriEditorConto({ contoId = null } = {}) {
 
   /** Prima di ridisegnare si salvano i campi di testo digitati (il ridisegno li ricrea). */
   function ricorda() {
-    for (const [id, chiave] of [['ec-nome', 'nome'], ['ec-saldo', 'saldo'], ['ec-data', 'data']]) {
+    for (const [id, chiave] of [['ec-nome', 'nome'], ['ec-saldo', 'saldo'], ['ec-data', 'data'], ['ec-obiettivo', 'obiettivo']]) {
       const campo = radice.querySelector(`#${id}`);
       if (campo) stato[chiave] = campo.value;
     }
