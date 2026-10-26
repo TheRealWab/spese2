@@ -171,7 +171,20 @@ html[data-nav="compatta"] { --nav-attuale: var(--nav-compatta); }
   color: var(--testo-3);
   transition: background var(--dur-2) var(--ease), color var(--dur-2) var(--ease);
 }
-.nav-pillola { display: grid; place-items: center; }
+.nav-pillola { position: relative; display: grid; place-items: center; }
+/* Puntino di promemoria (backup da fare) */
+.nav-voce[data-promemoria] .nav-pillola::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid light-dark(#ffffff, #1e1f28);
+  border-radius: 50%;
+  background: var(--arancio);
+  box-sizing: content-box;
+}
 .nav-etichetta {
   max-height: 1.2em;
   margin-top: 2px;

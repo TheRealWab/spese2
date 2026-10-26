@@ -14,7 +14,9 @@ export const ITERAZIONI = 600_000; // SPEC: almeno 310.000
 export const MINIMO_ITERAZIONI = 100_000; // sotto questa soglia un file viene rifiutato (non è stato creato da noi)
 export const MASSIMO_ITERAZIONI = 5_000_000; // sopra, un file malevolo potrebbe bloccare il telefono
 export const LUNGHEZZA_MINIMA_PASSWORD = 8;
-export const GIORNI_AVVISO_BACKUP = 30;
+export const GIORNI_AVVISO_BACKUP = 30; // avvisi "non hai un backup recente" prima di operazioni delicate
+export const GIORNI_PROMEMORIA_BACKUP = 7; // promemoria periodico (puntino sulla barra, scheda in Altro)
+export const GIORNI_ATTESA_PRIMO_BACKUP = 2;
 
 export const ARCHIVI_BACKUP = ['conti', 'categorie', 'movimenti', 'valoriInvestimento', 'ricorrenti', 'impostazioni'];
 
@@ -163,6 +165,21 @@ export function statoUltimoBackup(ultimoBackup, oggi) {
   if (!dataValida(ultimoBackup)) return { giorni: null, daFare: true };
   const giorni = Math.max(0, giorniTra(ultimoBackup, oggi));
   return { giorni, daFare: giorni > GIORNI_AVVISO_BACKUP };
+}
+
+/**
+ * Il promemoria "fai il backup" (puntino sulla barra e scheda in Altro): c'è quando l'ultimo backup ha almeno
+ * GIORNI_PROMEMORIA_BACKUP giorni. Se non ne è mai stato fatto uno si aspetta il terzo giorno d'uso, per non
+ * assillare chi ha appena iniziato (senza una data di primo avvio, invece, si ricorda subito).
+ * Restituisce null (niente da ricordare) oppure { giorni, mai }.
+ */
+export function promemoriaBackup(ultimoBackup, primoAvvio, oggi) {
+  if (dataValida(ultimoBackup)) {
+    const giorni = Math.max(0, giorniTra(ultimoBackup, oggi));
+    return giorni >= GIORNI_PROMEMORIA_BACKUP ? { giorni, mai: false } : null;
+  }
+  if (dataValida(primoAvvio) && giorniTra(primoAvvio, oggi) < GIORNI_ATTESA_PRIMO_BACKUP) return null;
+  return { giorni: null, mai: true };
 }
 
 export function descriviUltimoBackup({ giorni }) {

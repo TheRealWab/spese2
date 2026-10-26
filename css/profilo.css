@@ -29,6 +29,18 @@
   text-align: left;
 }
 .profilo-scheda + .gruppo { margin-top: var(--sp-5); }
+
+/* ---- Promemoria del backup, in cima ad Altro ---- */
+.promemoria-backup {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+  padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-4);
+  background: linear-gradient(135deg, var(--arancio-tenue), var(--scheda) 80%);
+}
+.promemoria-icona { --c: var(--arancio); }
+.promemoria-backup .pulsante { flex: none; }
 .profilo-scheda:active { transform: scale(0.99); }
 .profilo-scheda { transition: transform var(--dur-1) var(--ease); }
 .profilo-testo { display: grid; flex: 1; gap: 2px; min-width: 0; }

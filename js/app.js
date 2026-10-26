@@ -4,6 +4,8 @@ import { apriDb } from './db.js';
 import { eseguiSeedSeServe } from './model/seed.js';
 import { caricaImpostazioni, impostazioni, applicaTema, seguiTemaDiSistema, assicuraPrimoAvvio } from './model/impostazioni.js';
 import { applicaSfondo } from './util/sfondo-app.js';
+import { richiediArchiviazionePersistente } from './util/archiviazione.js';
+import { promemoriaBackup } from './model/backup.js';
 import { caricaCatalogo } from './model/catalogo.js';
 import { oggiIso } from './util/date.js';
 import { icona } from './util/icone.js';
@@ -49,6 +51,17 @@ function costruisciNavigazione() {
   });
   document.getElementById('fab').innerHTML = icona('plus', 28);
   document.getElementById('fab').addEventListener('click', () => apriInserimento());
+}
+
+/** Il puntino arancione sulla voce "Altro" quando è ora di fare il backup (la scheda con il pulsante sta in Altro). */
+function aggiornaPromemoriaBackup() {
+  const voce = document.querySelector('.nav-voce[data-rotta="altro"]');
+  if (!voce) return;
+  const { ultimoBackup, primoAvvio } = impostazioni();
+  const serve = Boolean(promemoriaBackup(ultimoBackup, primoAvvio, oggiIso()));
+  voce.toggleAttribute('data-promemoria', serve);
+  if (serve) voce.setAttribute('aria-label', 'Altro, backup da fare');
+  else voce.removeAttribute('aria-label');
 }
 
 /** Cambio d'area chiesto dall'utente (tocco sulla barra): aggiorna la cronologia e la schermata. */
@@ -307,7 +320,9 @@ async function avvia() {
   applicaTema(impostazioni().tema);
   applicaSfondo(impostazioni().sfondo);
   seguiTemaDiSistema();
+  richiediArchiviazionePersistente(); // senza attendere: protegge i dati dalla pulizia automatica del browser
   costruisciNavigazione();
+  aggiornaPromemoriaBackup();
   inizializzaBarra();
   inizializzaBlocco();
   controllaBlocco(); // con il blocco attivo, copre subito tutto: i dati non restano visibili
@@ -321,7 +336,12 @@ async function avvia() {
   avvisaSeAggiornata();
 
   document.addEventListener('spese2:movimenti', (e) => istanza?.aggiorna?.({ evento: 'movimenti', ...e.detail }));
-  document.addEventListener('spese2:impostazioni', (e) => istanza?.aggiorna?.({ evento: 'impostazioni', ...e.detail }));
+  document.addEventListener('spese2:impostazioni', (e) => {
+    aggiornaPromemoriaBackup(); // un backup appena fatto (o ripristinato) spegne il puntino
+    istanza?.aggiorna?.({ evento: 'impostazioni', ...e.detail });
+  });
+  // Tornando all'app dopo qualche giorno il promemoria può essere scattato nel frattempo.
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') aggiornaPromemoriaBackup(); });
   document.addEventListener('spese2:categorie', (e) => istanza?.aggiorna?.({ evento: 'categorie', ...e.detail }));
   document.addEventListener('spese2:conti', (e) => istanza?.aggiorna?.({ evento: 'conti', ...e.detail }));
   // Un ricorrente nuovo, modificato o ripreso si elabora subito (le sue scadenze passate si registrano senza aspettare).

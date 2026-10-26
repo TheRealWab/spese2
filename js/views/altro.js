@@ -12,7 +12,8 @@ import { apriSicurezza } from '../components/sicurezza-ui.js';
 import { sicurezza } from '../model/blocco.js';
 import { apriEsportaBackup } from '../components/backup-esporta.js';
 import { apriRipristinaBackup } from '../components/backup-ripristina.js';
-import { statoUltimoBackup, descriviUltimoBackup } from '../model/backup.js';
+import { statoUltimoBackup, descriviUltimoBackup, promemoriaBackup } from '../model/backup.js';
+import { statoArchiviazione } from '../util/archiviazione.js';
 import { oggiIso, dataValida } from '../util/date.js';
 import { VERSIONE_APP, CREATORE } from '../versione.js';
 import { dataLunga } from '../util/formato.js';
@@ -41,8 +42,20 @@ export function monta(radice) {
     const profilo = imp.profilo;
     const haNome = Boolean(profilo.nome);
 
+    const promemoria = promemoriaBackup(imp.ultimoBackup, imp.primoAvvio, oggiIso());
+
     radice.innerHTML = `
       <h1 class="solo-sr">Altro</h1>
+
+      ${promemoria ? `
+        <div class="scheda promemoria-backup" role="status">
+          <span class="cerchio promemoria-icona" style="--dim:44px">${icona('triangle-alert', 22)}</span>
+          <span class="riga-testo">
+            <span class="riga-titolo">Backup da fare</span>
+            <span class="riga-sotto">${promemoria.mai ? 'Non ne hai ancora fatto nessuno' : descriviUltimoBackup(promemoria)}</span>
+          </span>
+          <button type="button" class="pulsante pulsante-piccolo" data-az="backup-ora">Crea backup</button>
+        </div>` : ''}
 
       <button type="button" class="scheda profilo-scheda" data-az="profilo" aria-label="Il tuo profilo">
         ${htmlAvatar(profilo, 72)}
@@ -113,7 +126,7 @@ export function monta(radice) {
           <button type="button" class="riga-lista" data-az="backup">
             <span class="cerchio cerchio-neutro">${icona('download', 20)}</span>
             <span class="riga-testo"><span class="riga-titolo">Backup</span><span class="riga-sotto">${descriviUltimoBackup(backup)}</span></span>
-            ${backup.daFare ? '<span class="badge badge-avviso">Da fare</span>' : ''}${icona('chevron-right', 18)}
+            ${promemoria ? '<span class="badge badge-avviso">Da fare</span>' : ''}${icona('chevron-right', 18)}
           </button>
           <button type="button" class="riga-lista" data-az="sicurezza">
             <span class="cerchio cerchio-neutro">${icona('shield-check', 20)}</span>
@@ -139,6 +152,13 @@ export function monta(radice) {
               <span class="riga-sotto" data-r="offline">Verifica in corso…</span>
             </span>
           </div>
+          <div class="riga-lista">
+            <span class="cerchio cerchio-neutro">${icona('database', 20)}</span>
+            <span class="riga-testo">
+              <span class="riga-titolo">Protezione dei dati</span>
+              <span class="riga-sotto" data-r="archiviazione">Verifica in corso…</span>
+            </span>
+          </div>
         </div>
         <p class="nota-fondo">I tuoi dati restano su questo dispositivo. Nessun server, nessun invio.</p>
       </section>
@@ -146,6 +166,18 @@ export function monta(radice) {
       <p class="creatore">Creata da <strong>${esc(CREATORE)}</strong></p>`;
 
     mostraStatoOffline();
+    mostraStatoArchiviazione();
+  }
+
+  /** Se il browser ha concesso la protezione dei dati dalla pulizia automatica (vedi util/archiviazione.js). */
+  async function mostraStatoArchiviazione() {
+    const campo = $('[data-r="archiviazione"]', radice);
+    if (!campo) return;
+    const stato = await statoArchiviazione();
+    if (!campo.isConnected) return;
+    campo.textContent = stato === true
+      ? 'Protetti dalla cancellazione automatica'
+      : (stato === false ? 'Non garantita: il backup è l\'unica salvezza' : 'Non verificabile in questo browser');
   }
 
   async function mostraStatoOffline() {
@@ -197,6 +229,8 @@ export function monta(radice) {
       apriImportazione();
     } else if (az === 'sicurezza') {
       apriSicurezza();
+    } else if (az === 'backup-ora') {
+      apriEsportaBackup();
     } else if (az === 'backup') {
       const scelta = await scegliAbbinamento({
         titolo: 'Backup',

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   cifra, decifra, leggiIntestazione, pacchettoDati, validaDatiBackup, riepilogoBackup, unisci,
-  statoUltimoBackup, descriviUltimoBackup, nomeFileBackup, aBase64, daBase64, ErroreBackup,
+  statoUltimoBackup, descriviUltimoBackup, promemoriaBackup, nomeFileBackup, aBase64, daBase64, ErroreBackup,
   FORMATO, ITERAZIONI, MASSIMO_ITERAZIONI,
 } from '../js/model/backup.js';
 import { giorniTra } from '../js/util/date.js';
@@ -171,4 +171,18 @@ test('unisci non modifica gli archivi ricevuti', () => {
   const copia = structuredClone(locali);
   unisci(locali, pacchettoDati(archivi()));
   assert.deepEqual(locali, copia);
+});
+
+test('promemoria del backup: scatta dopo 7 giorni; se non ne è mai stato fatto uno, dal terzo giorno d\'uso', () => {
+  const oggi = '2026-10-26';
+  assert.equal(promemoriaBackup('2026-10-26', '2026-10-01', oggi), null); // oggi
+  assert.equal(promemoriaBackup('2026-10-20', '2026-10-01', oggi), null); // 6 giorni fa: ancora presto
+  assert.deepEqual(promemoriaBackup('2026-10-19', '2026-10-01', oggi), { giorni: 7, mai: false }); // 7 giorni
+  assert.deepEqual(promemoriaBackup('2026-09-01', '2026-08-01', oggi), { giorni: 55, mai: false });
+  // mai fatto: si aspetta un po' per chi ha appena iniziato
+  assert.equal(promemoriaBackup(null, '2026-10-26', oggi), null);
+  assert.equal(promemoriaBackup(null, '2026-10-25', oggi), null);
+  assert.deepEqual(promemoriaBackup(null, '2026-10-24', oggi), { giorni: null, mai: true });
+  assert.deepEqual(promemoriaBackup(null, null, oggi), { giorni: null, mai: true }); // senza data di primo avvio si ricorda subito
+  assert.equal(descriviUltimoBackup({ giorni: 9 }), 'Ultimo backup: 9 giorni fa');
 });
