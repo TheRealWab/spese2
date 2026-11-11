@@ -9,6 +9,7 @@ import { promemoriaBackup } from './model/backup.js';
 import { caricaCatalogo } from './model/catalogo.js';
 import { oggiIso } from './util/date.js';
 import { icona } from './util/icone.js';
+import { iconaPiena } from './util/icone-piene.js';
 import { esc } from './util/dom.js';
 import { apriInserimento } from './components/inserimento.js';
 import { impostaGestoreIndietro } from './components/pannello.js';
@@ -43,7 +44,7 @@ function costruisciNavigazione() {
   // L'indicatore (il cerchio colorato dietro la voce attiva) è uno solo e scorre da una voce all'altra.
   document.getElementById('nav').innerHTML = '<span class="nav-indicatore" aria-hidden="true"></span>' + ROTTE.map((r) => `
     <button type="button" class="nav-voce" data-rotta="${r.id}">
-      <span class="nav-pillola">${icona(r.icona, 22)}</span><span class="nav-etichetta">${r.etichetta}</span>
+      <span class="nav-pillola"><span class="nav-ic nav-ic-linea">${icona(r.icona, 22)}</span><span class="nav-ic nav-ic-piena">${iconaPiena(r.icona, 22)}</span></span><span class="nav-etichetta">${r.etichetta}</span>
     </button>`).join('');
   document.getElementById('nav').addEventListener('click', (e) => {
     const id = e.target.closest('[data-rotta]')?.dataset.rotta;

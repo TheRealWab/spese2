@@ -142,6 +142,15 @@ html[data-nav="compatta"] { --nav-attuale: var(--nav-compatta); }
   padding: 0 var(--sp-3) calc(var(--nav-margine) + var(--safe-sotto));
   pointer-events: none; /* lo spazio attorno alla pillola lascia passare i tocchi */
 }
+/* Sfumatura sul fondo: il contenuto sparisce piano verso la barra di sistema del telefono invece di tagliarsi di netto */
+.nav::before {
+  content: "";
+  position: absolute;
+  inset: -34px 0 0;
+  z-index: -1;
+  background: linear-gradient(to top, color-mix(in srgb, var(--sfondo) 88%, transparent) 30%, transparent);
+  pointer-events: none;
+}
 .nav-interno {
   position: relative;
   pointer-events: auto;
@@ -172,6 +181,11 @@ html[data-nav="compatta"] { --nav-attuale: var(--nav-compatta); }
   transition: background var(--dur-2) var(--ease), color var(--dur-2) var(--ease);
 }
 .nav-pillola { position: relative; display: grid; place-items: center; }
+/* Due icone una sopra l'altra: a contorno e piena. La voce attiva mostra quella piena, con un piccolo effetto molla. */
+.nav-ic { grid-area: 1 / 1; display: grid; place-items: center; transition: opacity var(--dur-2) var(--ease), transform var(--dur-3) var(--ease-molla); }
+.nav-ic-piena { opacity: 0; transform: scale(0.55); }
+.nav-voce[aria-current="page"] .nav-ic-linea { opacity: 0; transform: scale(1.25); }
+.nav-voce[aria-current="page"] .nav-ic-piena { opacity: 1; transform: none; }
 /* Puntino di promemoria (backup da fare) */
 .nav-voce[data-promemoria] .nav-pillola::after {
   content: "";

@@ -6,7 +6,7 @@
 
 // Va tenuta uguale a VERSIONE_APP in js/versione.js (lo verifica un test).
 // Cambiarla a ogni rilascio: cambia il nome della cache e i file vengono riscaricati.
-const VERSIONE = '2.1.0';
+const VERSIONE = '2.2.0';
 const PREFISSO_CACHE = 'spese2-';
 const CACHE = `${PREFISSO_CACHE}${VERSIONE}`;
 
@@ -43,6 +43,7 @@ const FILE = [
   'js/util/formato.js',
   'js/util/importi-privati.js',
   'js/util/icone.js',
+  'js/util/icone-piene.js',
   'js/util/id.js',
   'js/model/azzera.js',
   'js/model/aspetto.js',
