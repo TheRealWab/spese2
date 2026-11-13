@@ -127,6 +127,69 @@ export function ripartizioneInvestito(storie, data) {
   return { investito, nonInvestito, totale, percentualeInvestito, percentualeNonInvestito: 100 - percentualeInvestito };
 }
 
+// ---- Divisione del patrimonio per gruppi (la barra sotto il totale) ----
+
+/** I gruppi nell'ordine in cui compaiono nella barra. */
+export const GRUPPI_PATRIMONIO = ['alto', 'basso', 'da-classificare', 'liquidita'];
+export const NOME_GRUPPO = { alto: 'Alto rischio', basso: 'Basso rischio', 'da-classificare': 'Da classificare', liquidita: 'Liquidità' };
+
+/** In quale gruppo cade un conto: gli investimenti secondo il rischio scelto, tutto il resto è liquidità. */
+export function gruppoDelConto(conto) {
+  if (conto.tipo !== 'investimenti') return 'liquidita';
+  if (conto.rischio === 'alto' || conto.rischio === 'basso') return conto.rischio;
+  return 'da-classificare';
+}
+
+/** Percentuali intere che sommano 100 (metodo dei resti più alti: nessun gruppo "ruba" il punto di arrotondamento). */
+function percentualiIntere(importi, totale) {
+  const esatte = importi.map((x) => (x / totale) * 100);
+  const intere = esatte.map(Math.floor);
+  let mancano = 100 - intere.reduce((s, x) => s + x, 0);
+  const perResto = esatte.map((x, i) => ({ i, resto: x - intere[i] })).sort((a, b) => b.resto - a.resto);
+  for (const { i } of perResto) { if (mancano <= 0) break; intere[i] += 1; mancano -= 1; }
+  return intere;
+}
+
+/**
+ * Come si divide il patrimonio: investimenti ad alto rischio, a basso rischio, non ancora classificati, e liquidità.
+ * Restituisce { totale, voci: [{ gruppo, importo, percentuale }] } con solo i gruppi che hanno qualcosa, oppure null se
+ * dividere non ha senso (patrimonio zero o negativo, oppure un gruppo in negativo, per esempio uno scoperto).
+ */
+export function ripartizionePatrimonio(storie, data) {
+  const importi = new Map(GRUPPI_PATRIMONIO.map((g) => [g, 0]));
+  for (const s of storie.values()) {
+    if (s.conto.archiviato) continue;
+    const gruppo = gruppoDelConto(s.conto);
+    importi.set(gruppo, importi.get(gruppo) + s.saldoAl(data));
+  }
+  const totale = [...importi.values()].reduce((s, x) => s + x, 0);
+  if (totale <= 0 || [...importi.values()].some((x) => x < 0)) return null;
+  const presenti = GRUPPI_PATRIMONIO.filter((g) => importi.get(g) > 0);
+  const percentuali = percentualiIntere(presenti.map((g) => importi.get(g)), totale);
+  return { totale, voci: presenti.map((gruppo, i) => ({ gruppo, importo: importi.get(gruppo), percentuale: percentuali[i] })) };
+}
+
+/**
+ * I conti di un gruppo, raccolti per etichetta: [{ etichetta, importo, conti: [{ conto, saldo }] }], dall'etichetta che
+ * vale di più; i conti senza etichetta stanno insieme (etichetta '') e vanno in fondo. Per la liquidità l'etichetta è
+ * sempre vuota: si ottiene un solo elenco.
+ */
+export function dettaglioGruppo(storie, data, gruppo) {
+  const perEtichetta = new Map();
+  for (const s of storie.values()) {
+    if (s.conto.archiviato || gruppoDelConto(s.conto) !== gruppo) continue;
+    const etichetta = s.conto.tipo === 'investimenti' ? String(s.conto.etichetta ?? '').trim() : '';
+    const voce = perEtichetta.get(etichetta) ?? { etichetta, importo: 0, conti: [] };
+    const saldo = s.saldoAl(data);
+    voce.importo += saldo;
+    voce.conti.push({ conto: s.conto, saldo });
+    perEtichetta.set(etichetta, voce);
+  }
+  const voci = [...perEtichetta.values()];
+  for (const v of voci) v.conti.sort((a, b) => b.saldo - a.saldo);
+  return voci.sort((a, b) => (a.etichetta === '') - (b.etichetta === '') || b.importo - a.importo);
+}
+
 /** Variazione del patrimonio rispetto a un mese prima. `percentuale` è null se un mese fa era zero o negativo. */
 export function variazioneRispettoAMeseFa(storie, oggi) {
   const prima = patrimonioAl(storie, aggiungiMesi(oggi, -1));

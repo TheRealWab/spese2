@@ -23,14 +23,23 @@ const cifreMostrate = new Map(); // ultime cifre viste: la prossima animazione p
 
 const plurale = (n, uno, molti) => `${n} ${n === 1 ? uno : molti}`;
 
+/**
+ * Da chiamare PRIMA di aprire l'area per arrivarci su un periodo e un tipo precisi (per esempio dalle schede
+ * Entrate e Spese di Mese). Un periodo non valido viene scartato da monta().
+ */
+export function preimposta({ periodo: nuovoPeriodo = null, tipo: nuovoTipo = null } = {}) {
+  if (nuovoPeriodo) periodo = nuovoPeriodo;
+  if ((nuovoTipo === 'spesa' || nuovoTipo === 'entrata') && nuovoTipo !== tipo) {
+    tipo = nuovoTipo;
+    cifreMostrate.clear();
+  }
+}
+
 export function monta(radice) {
   radice.classList.add('vista-categorie');
   radice.innerHTML = `
-    <div data-r="selettore"></div>
-    <div class="segmentato ct-tipo" role="group" aria-label="Spese o entrate">
-      <button type="button" data-tipo="spesa" aria-pressed="${tipo === 'spesa'}">Spese</button>
-      <button type="button" data-tipo="entrata" aria-pressed="${tipo === 'entrata'}">Entrate</button>
-    </div>
+    <h1 class="solo-sr">Categorie</h1>
+    <section class="scheda sel-scheda"><div data-r="selettore"></div></section>
     <div class="mese-contenuto" data-r="contenuto"></div>`;
 
   const contenuto = $('[data-r="contenuto"]', radice);
@@ -81,10 +90,13 @@ export function monta(radice) {
     if (mia !== sequenza) return; // nel frattempo l'utente ha cambiato periodo o tipo
 
     const t = totaliPerCategoria(movimenti, tipo);
-    const etichetta = tipo === 'spesa' ? 'Spese' : 'Entrate';
+    // La scelta Spese/Entrate sta dentro la scheda del totale: è la cifra che cambia, e fa anche da etichetta.
     contenuto.innerHTML = `
       <section class="scheda indicatore ct-totale ${tipo === 'spesa' ? 'tono-spesa' : 'tono-entrata'}">
-        <p class="ind-et">${etichetta} del periodo</p>
+        <div class="segmentato ct-tipo" role="group" aria-label="Spese o entrate">
+          <button type="button" data-tipo="spesa" aria-pressed="${tipo === 'spesa'}">Spese</button>
+          <button type="button" data-tipo="entrata" aria-pressed="${tipo === 'entrata'}">Entrate</button>
+        </div>
         <div class="ind-riga"><span class="ind-valore" data-r="hero" ${attrCifra('hero', t.totale, 'compatto')}>${euroCompatto(t.totale)}</span></div>
         <p class="ind-sotto">${t.conteggio ? `${plurale(t.conteggio, 'movimento', 'movimenti')} in ${plurale(t.righe.length, 'categoria', 'categorie')}` : 'Nessun movimento in questo periodo'}</p>
       </section>
@@ -112,7 +124,6 @@ export function monta(radice) {
     const nuovoTipo = e.target.closest('[data-tipo]')?.dataset.tipo;
     if (nuovoTipo && nuovoTipo !== tipo) {
       tipo = nuovoTipo;
-      radice.querySelectorAll('[data-tipo]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tipo === tipo)));
       cifreMostrate.clear(); // cambiando tra spese ed entrate le cifre ripartono da 0
       disegna();
       return;

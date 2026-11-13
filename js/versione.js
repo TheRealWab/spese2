@@ -1,7 +1,7 @@
 // Versione dell'app. Va tenuta uguale alla costante VERSIONE in sw.js (lo verifica un test):
 // cambiare versione cambia il nome della cache e fa scaricare i file aggiornati.
 
-export const VERSIONE_APP = '2.2.0';
+export const VERSIONE_APP = '2.3.0';
 
 // Il nome che si legge nell'app. Dentro il codice e i file di backup restano gli identificativi tecnici
 // "spese2" (database, cache, formato del backup): cambiarli farebbe perdere i dati già salvati.

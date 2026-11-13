@@ -42,8 +42,8 @@ function periodoIniziale(giornoInizio) {
 export function monta(radice) {
   radice.classList.add('vista-grafici');
   radice.innerHTML = `
-    <h1 class="vista-titolo">Grafici</h1>
-    <section class="scheda gf-selettore"><div data-r="selettore"></div></section>
+    <h1 class="solo-sr">Grafici</h1>
+    <section class="scheda sel-scheda"><div data-r="selettore"></div></section>
     <div class="mese-contenuto" data-r="contenuto"></div>`;
 
   const contenuto = $('[data-r="contenuto"]', radice);

@@ -1,6 +1,7 @@
 /* Area Categorie e dettaglio di una categoria. */
 
 .vista-categorie { display: grid; gap: var(--sp-3); touch-action: pan-y; }
+.vista-categorie { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); }
 .ct-tipo { margin-bottom: var(--sp-1); }
 .sel-modi { margin-bottom: var(--sp-3); }
 .mese-testata .btn-icona:disabled { opacity: 0.3; }

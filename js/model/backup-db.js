@@ -4,7 +4,7 @@ import { tutti, salvaGruppo, sostituisciArchivi } from '../db.js';
 import { oggiIso } from '../util/date.js';
 import { caricaCatalogo } from './catalogo.js';
 import { caricaImpostazioni, impostazioni, applicaTema, salvaImpostazioni, ID_IMPOSTAZIONI } from './impostazioni.js';
-import { ARCHIVI_BACKUP, cifra, pacchettoDati, unisci } from './backup.js';
+import { ARCHIVI_BACKUP, cifra, decifra, pacchettoDati, unisci } from './backup.js';
 import { aspettoDopoRipristino, normalizzaProfilo } from './aspetto.js';
 import { applicaSfondo } from '../util/sfondo-app.js';
 
@@ -13,9 +13,15 @@ async function leggiArchivi() {
   return Object.fromEntries(ARCHIVI_BACKUP.map((nome, i) => [nome, lista[i]]));
 }
 
-/** Crea il backup cifrato di tutti i dati. Restituisce il testo del file. */
+/**
+ * Crea il backup cifrato di tutti i dati e lo prova subito: lo riapre con la stessa password e ne controlla il
+ * contenuto, esattamente come farà il ripristino. Un backup che non si riapre non deve mai risultare "salvato"
+ * (lancia ErroreBackup). Restituisce il testo del file.
+ */
 export async function creaBackup(password) {
-  return cifra(pacchettoDati(await leggiArchivi()), password);
+  const testo = await cifra(pacchettoDati(await leggiArchivi()), password);
+  await decifra(testo, password);
+  return testo;
 }
 
 export const segnaBackupFatto = () => salvaImpostazioni({ ultimoBackup: oggiIso() });

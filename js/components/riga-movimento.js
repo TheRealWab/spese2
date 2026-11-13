@@ -23,7 +23,7 @@ export function htmlRigaMovimento(m, { evidenzia = false, formato = euro } = {})
     const destinazione = contoPerId(m.contoDestinazioneId);
     cerchio = `<span class="cerchio cerchio-neutro" style="--dim:44px">${icona('arrow-left-right', 22)}</span>`;
     titolo = 'Trasferimento';
-    dettaglio = `${esc(conto?.nome ?? '—')} → ${esc(destinazione?.nome ?? '—')}`;
+    dettaglio = `${esc(conto?.nome ?? '—')} <span class="mov-verso"><span aria-hidden="true">→</span><span class="solo-sr">verso</span> ${esc(destinazione?.nome ?? '—')}</span>`;
     importo = formato(m.importo);
     classeImporto = 'importo-trasferimento';
   } else {
@@ -42,7 +42,7 @@ export function htmlRigaMovimento(m, { evidenzia = false, formato = euro } = {})
       ${cerchio}
       <span class="mov-testo">
         <span class="mov-titolo">${titolo}</span>
-        <span class="mov-dettaglio">${dettaglio}</span>
+        <span class="mov-dettaglio ${m.tipo === 'trasferimento' ? 'mov-giro' : ''}">${dettaglio}</span>
       </span>
       <span class="mov-importo ${classeImporto}">${importo}</span>
     </button>`;

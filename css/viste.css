@@ -12,6 +12,11 @@
   text-align: center;
 }
 .mese-contenuto { display: grid; gap: var(--sp-4); touch-action: pan-y; }
+
+/* Selettore del periodo con i suoi modi (Categorie, Grafici): sempre dentro una scheda, come nel grafico del Patrimonio */
+.sel-scheda { padding: var(--sp-3); }
+.sel-scheda .mese-testata { margin-bottom: var(--sp-2); }
+.sel-scheda .sel-modi { margin-bottom: 0; }
 .slide-avanti { animation: slide-avanti var(--dur-2) var(--ease) both; }
 .slide-indietro { animation: slide-indietro var(--dur-2) var(--ease) both; }
 @keyframes slide-avanti { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
@@ -57,7 +62,8 @@
 
 /* Riepilogo entrate / spese / risparmio */
 .riepilogo { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); }
-.mini { position: relative; display: grid; gap: 4px; min-width: 0; padding: var(--sp-3) var(--sp-3) var(--sp-3) calc(var(--sp-3) + 3px); overflow: hidden; }
+.mini { position: relative; display: grid; justify-items: start; gap: 4px; min-width: 0; padding: var(--sp-3) var(--sp-3) var(--sp-3) calc(var(--sp-3) + 3px); overflow: hidden; text-align: left; transition: transform 0.12s ease; }
+.mini:active { transform: scale(0.96); }
 .mini::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--tono, transparent); } /* barretta colorata sul bordo */
 .mini-et { display: flex; align-items: center; gap: 4px; font-size: var(--t-xs); font-weight: 600; color: var(--tono, var(--testo-2)); }
 .mini-valore { font-size: var(--t-m); font-weight: 700; white-space: nowrap; color: var(--tono, var(--testo)); }
@@ -84,6 +90,22 @@
 .mov-titolo { overflow: hidden; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .mov-dettaglio { overflow: hidden; font-size: var(--t-s); color: var(--testo-2); text-overflow: ellipsis; white-space: nowrap; }
 .mov-conto { font-size: var(--t-xs); color: var(--testo-3); }
+/* Trasferimento: «da → a». Se non sta su una riga va a capo prima della freccia, così la destinazione si legge sempre. */
+.mov-giro { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal; line-height: 1.25; }
+.mov-verso { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+
+/* Foglio "Risparmio" (dalla scheda Risparmio di Mese) */
+.risp-conto { display: grid; padding: var(--sp-1) var(--sp-4); }
+.risp-riga { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-3) 0; }
+.risp-riga + .risp-riga { border-top: 1px solid var(--bordo); }
+.risp-riga dt { font-size: var(--t-s); font-weight: 600; color: var(--testo-2); }
+.risp-riga dd { margin: 0; font-weight: 700; white-space: nowrap; color: var(--tono, var(--testo)); }
+.risp-totale dt { font-size: var(--t-m); color: var(--testo); }
+.risp-totale dd { font-size: var(--t-l); }
+.risp-colonna { display: grid; gap: 2px; justify-content: stretch; }
+.risp-colonna dd { white-space: normal; }
+.risp-frase { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-1) var(--sp-2); font-weight: 600; color: var(--testo-2); }
+.risp-frase .icona { flex: none; }
 .mov-importo { font-weight: 650; white-space: nowrap; }
 .importo-entrata { color: var(--verde); }
 .importo-trasferimento { color: var(--testo-2); }

@@ -23,7 +23,10 @@ const ARCHIVI = {
 let connessione = null;
 
 export function apriDb() {
-  connessione ??= new Promise((ok, ko) => {
+  if (connessione) return connessione;
+  const questa = new Promise((ok, ko) => {
+    // Se la connessione si perde, la prossima operazione ne apre una nuova (ma solo se nel frattempo non è già stata sostituita).
+    const dimentica = () => { if (connessione === questa) connessione = null; };
     const richiesta = indexedDB.open(NOME_DB, VERSIONE_DB);
     richiesta.onupgradeneeded = () => {
       const db = richiesta.result;
@@ -34,14 +37,34 @@ export function apriDb() {
       }
     };
     richiesta.onsuccess = () => {
+      const db = richiesta.result;
       // Se un'altra scheda aggiorna lo schema, chiudiamo per non bloccarla.
-      richiesta.result.onversionchange = () => { richiesta.result.close(); connessione = null; };
-      ok(richiesta.result);
+      db.onversionchange = () => { db.close(); dimentica(); };
+      // Il browser può chiudere la connessione da solo (app a lungo in background, poco spazio, dati del sito ripuliti).
+      db.onclose = dimentica;
+      ok(db);
     };
-    richiesta.onerror = () => { connessione = null; ko(richiesta.error); };
-    richiesta.onblocked = () => ko(new Error('Database bloccato da un\'altra scheda aperta.'));
+    richiesta.onerror = () => { dimentica(); ko(richiesta.error); };
+    richiesta.onblocked = () => { dimentica(); ko(new Error('Database bloccato da un\'altra scheda aperta.')); };
   });
-  return connessione;
+  connessione = questa;
+  return questa;
+}
+
+/**
+ * Apre una transazione. Se la connessione risulta chiusa (il browser non sempre avvisa prima), ne apre una nuova e
+ * riprova una volta: senza, dopo una chiusura l'app non leggerebbe né salverebbe più nulla fino al riavvio.
+ */
+async function transazione(nomi, modo = 'readonly') {
+  const usata = apriDb();
+  const db = await usata;
+  try {
+    return db.transaction(nomi, modo);
+  } catch (errore) {
+    if (errore?.name !== 'InvalidStateError') throw errore;
+    if (connessione === usata) connessione = null; // se un'altra operazione l'ha già riaperta, si usa quella
+    return (await apriDb()).transaction(nomi, modo);
+  }
 }
 
 const comePromessa = (richiesta) => new Promise((ok, ko) => {
@@ -57,8 +80,7 @@ const transazioneCompletata = (tx) => new Promise((ok, ko) => {
 });
 
 async function archivio(nome, modo = 'readonly') {
-  const db = await apriDb();
-  const tx = db.transaction(nome, modo);
+  const tx = await transazione(nome, modo);
   return { tx, store: tx.objectStore(nome) };
 }
 
@@ -81,8 +103,7 @@ export async function salva(nome, oggetto) {
 /** Salva più oggetti di più archivi in un'unica transazione: o tutto o niente. */
 export async function salvaGruppo(perArchivio) {
   const nomi = Object.keys(perArchivio);
-  const db = await apriDb();
-  const tx = db.transaction(nomi, 'readwrite');
+  const tx = await transazione(nomi, 'readwrite');
   for (const [nome, oggetti] of Object.entries(perArchivio)) {
     const store = tx.objectStore(nome);
     for (const oggetto of oggetti) store.put(oggetto);
@@ -93,8 +114,7 @@ export async function salvaGruppo(perArchivio) {
 /** Svuota e riempie gli archivi indicati in un'unica transazione: se qualcosa fallisce, non cambia nulla. */
 export async function sostituisciArchivi(perArchivio) {
   const nomi = Object.keys(perArchivio);
-  const db = await apriDb();
-  const tx = db.transaction(nomi, 'readwrite');
+  const tx = await transazione(nomi, 'readwrite');
   for (const [nome, oggetti] of Object.entries(perArchivio)) {
     const store = tx.objectStore(nome);
     store.clear();
@@ -127,8 +147,7 @@ export async function perChiave(nome, indice, valore) {
 export async function applicaModifiche({ salva = {}, elimina = {} }) {
   const nomi = [...new Set([...Object.keys(salva), ...Object.keys(elimina)])];
   if (!nomi.length) return;
-  const db = await apriDb();
-  const tx = db.transaction(nomi, 'readwrite');
+  const tx = await transazione(nomi, 'readwrite');
   for (const [nome, oggetti] of Object.entries(salva)) {
     for (const oggetto of oggetti) tx.objectStore(nome).put(oggetto);
   }

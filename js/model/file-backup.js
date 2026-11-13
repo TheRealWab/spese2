@@ -68,7 +68,10 @@ export async function permessoDiScrittura(handle) {
   }
 }
 
-/** Scrive il testo sul file. La sostituzione è atomica: o resta il vecchio file, o c'è il nuovo intero. */
+/**
+ * Scrive il testo sul file e lo rilegge per controllare che sia arrivato intero (lancia un errore se non coincide).
+ * La sostituzione è atomica: o resta il vecchio file, o c'è il nuovo intero.
+ */
 export async function scriviSuFile(handle, testo) {
   const scrivibile = await handle.createWritable();
   try {
@@ -78,6 +81,13 @@ export async function scriviSuFile(handle, testo) {
     throw errore;
   }
   await scrivibile.close();
+  let riletto;
+  try {
+    riletto = await (await handle.getFile()).text();
+  } catch {
+    return; // alcune posizioni (es. cartelle nel cloud) non lasciano rileggere subito: la scrittura è comunque riuscita
+  }
+  if (riletto !== testo) throw new Error('Il file scritto non coincide con il backup creato.');
 }
 
 /** Condividere il file con un'altra app (Drive, File…), dove il browser lo permette. */

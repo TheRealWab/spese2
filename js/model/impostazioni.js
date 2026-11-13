@@ -43,14 +43,22 @@ export async function assicuraPrimoAvvio(oggi) {
   await salvaImpostazioni({ primoAvvio: primoAvvioStimato(await tutti('movimenti'), oggi) });
 }
 
+// I salvataggi vanno uno alla volta: ognuno parte dai valori lasciati dal precedente. Senza la fila, due salvataggi
+// partiti nello stesso istante leggerebbero entrambi i valori vecchi e il secondo cancellerebbe la modifica del primo.
+let fila = Promise.resolve();
+
 /** Aggiorna uno o più valori, li salva e avvisa le viste. */
-export async function salvaImpostazioni(parziale) {
-  const nuove = { ...correnti, ...parziale, id: ID_IMPOSTAZIONI };
-  await salva('impostazioni', nuove);
-  correnti = nuove;
-  if ('tema' in parziale) applicaTema(nuove.tema);
-  if ('sfondo' in parziale) applicaSfondo(nuove.sfondo);
-  document.dispatchEvent(new CustomEvent('spese2:impostazioni', { detail: parziale }));
+export function salvaImpostazioni(parziale) {
+  const esito = fila.then(async () => {
+    const nuove = { ...correnti, ...parziale, id: ID_IMPOSTAZIONI };
+    await salva('impostazioni', nuove);
+    correnti = nuove;
+    if ('tema' in parziale) applicaTema(nuove.tema);
+    if ('sfondo' in parziale) applicaSfondo(nuove.sfondo);
+    document.dispatchEvent(new CustomEvent('spese2:impostazioni', { detail: parziale }));
+  });
+  fila = esito.catch(() => {}); // un salvataggio fallito non deve bloccare i successivi (l'errore arriva a chi l'ha chiesto)
+  return esito;
 }
 
 export function applicaTema(tema) {

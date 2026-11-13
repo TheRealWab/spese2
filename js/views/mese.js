@@ -11,6 +11,7 @@ import { mappaDelleCategorie, mappaDeiConti, categoriaStipendio } from '../model
 import { indicatoreStipendio, totaliPeriodo, raggruppaPerGiorno } from '../model/calcoli.js';
 import { htmlRigaMovimento } from '../components/riga-movimento.js';
 import { apriInserimento } from '../components/inserimento.js';
+import { apriDettaglioRisparmio } from '../components/dettaglio-risparmio.js';
 
 // Stato che sopravvive al cambio di area: tornando su Mese si ritrova lo stesso periodo.
 let ciclo = null;
@@ -69,11 +70,12 @@ export function monta(radice) {
   }
 
   function htmlRiepilogo(t) {
+    // Sono pulsanti: Entrate e Spese portano a Categorie su questo stesso periodo, Risparmio apre la spiegazione del conto.
     const scheda = (et, chiave, cent, nomeIcona, classe) => `
-      <div class="scheda mini ${classe}">
+      <button type="button" class="scheda mini ${classe}" data-az="scheda-${chiave}" aria-label="${et}: ${euroArrotondato(cent)}. ${chiave === 'risparmio' ? 'Vedi il conto' : 'Vedi per categoria'}">
         <span class="mini-et">${icona(nomeIcona, 16)}${et}</span>
         <span class="mini-valore" ${attrCifra(chiave, cent, 'arrotondato')}>${euroArrotondato(cent)}</span>
-      </div>`;
+      </button>`;
     return `
       <div class="riepilogo" aria-label="Riepilogo del periodo">
         ${scheda('Entrate', 'entrate', t.entrate, 'arrow-down-left', 'tono-entrata')}
@@ -152,7 +154,13 @@ export function monta(radice) {
     if (az === 'prec') vai(-1);
     else if (az === 'succ') vai(1);
     else if (az === 'oggi') tornaAdOggi();
-    else if (az === 'registra-stipendio') {
+    else if (az === 'scheda-entrate' || az === 'scheda-spese') {
+      document.dispatchEvent(new CustomEvent('spese2:vai', {
+        detail: { rotta: 'categorie', periodo: { modo: 'mese', da: ciclo.inizio, a: ciclo.fine }, tipo: az === 'scheda-entrate' ? 'entrata' : 'spesa' },
+      }));
+    } else if (az === 'scheda-risparmio') {
+      apriDettaglioRisparmio({ ciclo, giornoInizio: giornoInizio() });
+    } else if (az === 'registra-stipendio') {
       const stipendio = categoriaStipendio();
       apriInserimento({ iniziale: { tipo: 'entrata', categoriaId: stipendio?.id ?? null } });
     } else {

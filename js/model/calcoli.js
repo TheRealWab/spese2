@@ -29,6 +29,17 @@ export function totaliPeriodo(movimenti) {
 }
 
 /**
+ * Il risparmio di un periodo spiegato: entrate, spese, la differenza, quanta parte delle entrate è rimasta (`tasso`,
+ * in percentuale; null se non ci sono entrate) e quanto è stato spostato sugli investimenti.
+ */
+export function riepilogoRisparmio(movimenti, conti) {
+  const { entrate, spese, risparmio } = totaliPeriodo(movimenti);
+  let versoInvestimenti = 0;
+  for (const m of movimenti) if (eTrasferimentoVersoInvestimenti(m, conti)) versoInvestimenti += m.importo;
+  return { entrate, spese, risparmio, tasso: entrate > 0 ? (risparmio / entrate) * 100 : null, versoInvestimenti };
+}
+
+/**
  * Indicatore "Ti restano X di Y" (SPEC §6.1).
  * - stipendio = entrate del ciclo nella categoria con ruolo "stipendio"
  * - uscite = spese + trasferimenti verso conti investimenti

@@ -13,6 +13,8 @@ import { cancellaTuttiIDati } from '../model/azzera.js';
 
 let elemento = null; // la schermata, finché è visibile
 
+const SECONDI_PRIMA_DI_CANCELLARE = 10; // attesa prima che "Cancella tutto" si possa toccare
+
 const radice = document.documentElement;
 const rimuoviCopertura = () => { delete radice.dataset.copri; delete radice.dataset.bloccato; };
 
@@ -98,6 +100,7 @@ function mostraBlocco() {
 
   const stato = elemento.querySelector('[data-r="stato"]');
   let timerAttesa = null;
+  let timerCancella = null;
 
   const tastierino = creaTastierinoPin(elemento.querySelector('[data-r="pin"]'), {
     lunghezza: pin?.lunghezza ?? 4,
@@ -128,6 +131,7 @@ function mostraBlocco() {
 
   function sblocca() {
     clearInterval(timerAttesa);
+    clearInterval(timerCancella);
     tastierino.distruggi();
     azzeraTentativi();
     segnaSbloccato();
@@ -147,16 +151,35 @@ function mostraBlocco() {
     if (az === 'impronta') provaImpronta();
     else if (az === 'dimenticato') mostraConferma(true);
     else if (az === 'annulla-reset') mostraConferma(false);
-    else if (az === 'conferma-reset') await cancellaTuttiIDati();
+    else if (az === 'conferma-reset' && !e.target.closest('[data-az]').disabled) await cancellaTuttiIDati();
   });
 
-  /** La conferma sta DENTRO il blocco: i pannelli normali sarebbero coperti dalla schermata di blocco. */
+  /**
+   * La conferma sta DENTRO il blocco: i pannelli normali sarebbero coperti dalla schermata di blocco.
+   * "Cancella tutto" si attiva solo dopo un conto alla rovescia: da qui si arriva senza PIN, quindi due tocchi
+   * distratti (o di qualcun altro con il telefono in mano) non devono bastare a perdere i dati.
+   */
   function mostraConferma(si) {
     elemento.querySelector('[data-r="conferma"]').hidden = !si;
     elemento.querySelector('.blocco-testa').hidden = si;
     elemento.querySelector('[data-r="pin"]').hidden = si;
     elemento.querySelector('[data-r="frase"]').hidden = si;
     elemento.querySelector('.blocco-azioni').hidden = si;
+
+    clearInterval(timerCancella);
+    if (!si) return;
+    const pulsante = elemento.querySelector('[data-az="conferma-reset"]');
+    let restano = SECONDI_PRIMA_DI_CANCELLARE;
+    const aggiorna = () => {
+      pulsante.disabled = restano > 0;
+      pulsante.textContent = restano > 0 ? `Attendi ${restano} s` : 'Cancella tutto'; // testo corto: sta su una riga
+    };
+    aggiorna();
+    timerCancella = setInterval(() => {
+      restano -= 1;
+      aggiorna();
+      if (restano <= 0) clearInterval(timerCancella);
+    }, 1000);
   }
 
   controllaAttesa();

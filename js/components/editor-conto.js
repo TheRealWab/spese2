@@ -15,6 +15,7 @@ import { tuttiIContiInMemoria, contoPerId } from '../model/catalogo.js';
 import { COLORI_CATEGORIA } from '../model/palette.js';
 import {
   TIPI_CONTO, ETICHETTA_TIPO_CONTO, LUNGHEZZA_MAX_NOME_CONTO, ICONA_PREDEFINITA_CONTO, coloreContoSuggerito, puoArchiviareConto,
+  RISCHI, ETICHETTA_RISCHIO, DESCRIZIONE_RISCHIO, LUNGHEZZA_MAX_ETICHETTA, ETICHETTE_PROPOSTE, etichetteUsate,
 } from '../model/conti.js';
 import { creaStoriaConto, movimentiEsclusi, dateCompatibili } from '../model/patrimonio.js';
 import { ErroreConto, creaConto, aggiornaConto, archiviaConto, tuttiIValori } from '../model/conti-db.js';
@@ -39,6 +40,8 @@ export function apriEditorConto({ contoId = null } = {}) {
     saldo: esistente ? centesimiInDigitato(esistente.saldoIniziale) : '',
     // Un conto nuovo parte da ieri: così anche i movimenti di oggi (per esempio un trasferimento verso questo conto) si sommano al saldo.
     data: esistente?.dataSaldoIniziale ?? aggiungiGiorni(oggi, -1),
+    rischio: RISCHI.includes(esistente?.rischio) ? esistente.rischio : null, // solo investimenti: "alto" | "basso" | null (da classificare)
+    etichetta: esistente?.etichetta ?? '', // solo investimenti: «ETF», «BTP»…
     errore: '',
     salvando: false,
     movimentiConto: [], // i movimenti del conto (per avvisare di quelli che il saldo iniziale non conta)
@@ -59,6 +62,7 @@ export function apriEditorConto({ contoId = null } = {}) {
         else if (e.target.id === 'ec-saldo') { stato.saldo = e.target.value; aggiornaAvvisi(); }
         else if (e.target.id === 'ec-data') { stato.data = e.target.value; aggiornaAvvisi(); }
         else if (e.target.id === 'ec-obiettivo') stato.obiettivo = e.target.value;
+        else if (e.target.id === 'ec-etichetta') stato.etichetta = e.target.value;
         else return;
         if (stato.errore) segnalaErrore('');
       });
@@ -83,6 +87,7 @@ export function apriEditorConto({ contoId = null } = {}) {
   function disegna() {
     const nuovo = !esistente;
     const corrente = contoCorrente();
+    const posizione = radice.querySelector('.flusso-corpo')?.scrollTop ?? 0; // ridisegnando non si deve tornare in cima
     radice.innerHTML = `
       <div class="flusso col-${esc(stato.colore)}">
         <header class="flusso-testata">
@@ -110,6 +115,8 @@ export function apriEditorConto({ contoId = null } = {}) {
                   </button>`).join('')}
               </div>
             </section>` : `<p class="flusso-guida">Conto di tipo «${esc(ETICHETTA_TIPO_CONTO[stato.tipo] ?? '')}»${corrente?.archiviato ? ' · archiviato' : ''}.</p>`}
+
+          ${eInvestimento() ? htmlClasse() : ''}
 
           <section class="gruppo">
             <h3 class="gruppo-titolo">${eInvestimento() ? 'Versato iniziale' : 'Saldo iniziale'}</h3>
@@ -153,7 +160,43 @@ export function apriEditorConto({ contoId = null } = {}) {
           <button type="button" class="pulsante pulsante-grande" data-az="salva" ${stato.salvando ? 'disabled' : ''}>${nuovo ? 'Crea il conto' : 'Salva le modifiche'}</button>
         </footer>
       </div>`;
+    const corpo = radice.querySelector('.flusso-corpo');
+    if (corpo) corpo.scrollTop = posizione;
     aggiornaAvvisi();
+  }
+
+  /** Solo per gli investimenti: il rischio (decide la barra del Patrimonio) e un'etichetta libera più precisa. */
+  function htmlClasse() {
+    // Proposte: prima le etichette già usate sugli altri conti, poi quelle tipiche del rischio scelto. Niente doppioni.
+    const tipiche = stato.rischio ? ETICHETTE_PROPOSTE[stato.rischio] : [...ETICHETTE_PROPOSTE.alto, ...ETICHETTE_PROPOSTE.basso];
+    const viste = new Set();
+    const proposte = [...etichetteUsate(tuttiIContiInMemoria()), ...tipiche]
+      .filter((e) => { const k = e.toLowerCase(); if (viste.has(k)) return false; viste.add(k); return true; })
+      .slice(0, 6);
+    const scritta = stato.etichetta.trim().toLowerCase();
+    return `
+      <section class="gruppo">
+        <h3 class="gruppo-titolo">Che investimento è</h3>
+        <div class="scheda" role="radiogroup" aria-label="Livello di rischio">
+          ${RISCHI.map((r) => `
+            <button type="button" class="riga-lista" role="radio" aria-checked="${r === stato.rischio}" data-rischio="${r}">
+              <span class="pt-rip-punto pt-seg-${r} ec-punto"></span>
+              <span class="riga-testo"><span class="riga-titolo">${ETICHETTA_RISCHIO[r]}</span><span class="riga-sotto">${DESCRIZIONE_RISCHIO[r]}</span></span>
+              ${r === stato.rischio ? `<span class="opzione-spunta">${icona('check', 22)}</span>` : ''}
+            </button>`).join('')}
+        </div>
+        <div class="scheda ec-saldo">
+          <div class="campo">
+            <label for="ec-etichetta">Etichetta (facoltativa)</label>
+            <input id="ec-etichetta" class="campo-testo" type="text" maxlength="${LUNGHEZZA_MAX_ETICHETTA}" value="${esc(stato.etichetta)}"
+                   placeholder="Per esempio ETF" autocapitalize="sentences" enterkeyhint="done">
+          </div>
+          <div class="chip-riga" role="group" aria-label="Etichette proposte">
+            ${proposte.map((e) => `<button type="button" class="chip ${e.toLowerCase() === scritta ? 'chip-attivo' : ''}" data-etichetta="${esc(e)}">${esc(e)}</button>`).join('')}
+          </div>
+          <p class="nota-fondo">Il rischio decide in quale parte della barra del Patrimonio finisce questo conto. L'etichetta serve a distinguere, dentro lo stesso rischio, un tipo di investimento dall'altro. Valgono per tutto il conto: per tenere separati due tipi diversi servono due conti.</p>
+        </div>
+      </section>`;
   }
 
   /** «Il saldo non torna?»: si scrive il saldo giusto di oggi e l'app cerca la data del saldo iniziale che lo produce. */
@@ -257,8 +300,13 @@ export function apriEditorConto({ contoId = null } = {}) {
     radice.querySelector('[data-az="salva"]')?.setAttribute('disabled', '');
     try {
       if (esistente) {
-        const prima = { nome: esistente.nome, icona: esistente.icona, colore: esistente.colore, saldoIniziale: esistente.saldoIniziale, dataSaldoIniziale: esistente.dataSaldoIniziale };
-        await aggiornaConto(esistente.id, { nome: stato.nome, icona: stato.icona, colore: stato.colore, saldoIniziale, dataSaldoIniziale: stato.data });
+        const prima = {
+          nome: esistente.nome, icona: esistente.icona, colore: esistente.colore, saldoIniziale: esistente.saldoIniziale, dataSaldoIniziale: esistente.dataSaldoIniziale,
+          rischio: esistente.rischio ?? null, etichetta: esistente.etichetta ?? '',
+        };
+        await aggiornaConto(esistente.id, {
+          nome: stato.nome, icona: stato.icona, colore: stato.colore, saldoIniziale, dataSaldoIniziale: stato.data, rischio: stato.rischio, etichetta: stato.etichetta,
+        });
         // Se cambiano saldo o data (si sposta il saldo del conto) si può annullare: i valori di prima tornano subito.
         const cambiato = prima.saldoIniziale !== saldoIniziale || prima.dataSaldoIniziale !== stato.data;
         mostraToast('Modifiche salvate', cambiato
@@ -266,7 +314,10 @@ export function apriEditorConto({ contoId = null } = {}) {
           : {});
         c.chiudi({ azione: 'modificato', id: esistente.id });
       } else {
-        const creato = await creaConto({ nome: stato.nome, tipo: stato.tipo, icona: stato.icona, colore: stato.colore, saldoIniziale, dataSaldoIniziale: stato.data });
+        const creato = await creaConto({
+          nome: stato.nome, tipo: stato.tipo, icona: stato.icona, colore: stato.colore, saldoIniziale, dataSaldoIniziale: stato.data,
+          rischio: stato.rischio, etichetta: stato.etichetta,
+        });
         mostraToast(`Conto «${creato.nome}» creato`);
         c.chiudi({ azione: 'creato', id: creato.id });
       }
@@ -311,7 +362,12 @@ export function apriEditorConto({ contoId = null } = {}) {
     const az = e.target.closest('[data-az]')?.dataset.az;
     const colore = e.target.closest('[data-colore]')?.dataset.colore;
     const nuovoTipo = e.target.closest('[data-tipo]')?.dataset.tipo;
+    const rischio = e.target.closest('[data-rischio]')?.dataset.rischio;
+    const etichetta = e.target.closest('[data-etichetta]')?.dataset.etichetta;
     if (colore) { stato.colore = colore; ricorda(); disegna(); return; }
+    // Un secondo tocco sul rischio già scelto lo toglie (il conto torna «da classificare»).
+    if (rischio) { ricorda(); stato.rischio = stato.rischio === rischio ? null : rischio; disegna(); return; }
+    if (etichetta !== undefined) { ricorda(); stato.etichetta = stato.etichetta.trim().toLowerCase() === etichetta.toLowerCase() ? '' : etichetta; disegna(); return; }
     if (nuovoTipo && nuovoTipo !== stato.tipo) {
       // Se l'icona è ancora quella di default del tipo precedente, passa a quella del nuovo tipo.
       if (stato.icona === ICONA_PREDEFINITA_CONTO[stato.tipo]) stato.icona = ICONA_PREDEFINITA_CONTO[nuovoTipo];
@@ -346,7 +402,7 @@ export function apriEditorConto({ contoId = null } = {}) {
 
   /** Prima di ridisegnare si salvano i campi di testo digitati (il ridisegno li ricrea). */
   function ricorda() {
-    for (const [id, chiave] of [['ec-nome', 'nome'], ['ec-saldo', 'saldo'], ['ec-data', 'data'], ['ec-obiettivo', 'obiettivo']]) {
+    for (const [id, chiave] of [['ec-nome', 'nome'], ['ec-saldo', 'saldo'], ['ec-data', 'data'], ['ec-obiettivo', 'obiettivo'], ['ec-etichetta', 'etichetta']]) {
       const campo = radice.querySelector(`#${id}`);
       if (campo) stato[chiave] = campo.value;
     }

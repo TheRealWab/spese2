@@ -126,3 +126,26 @@ test('suggerisciNote: senza testo le più usate, con testo prima chi inizia poi 
   assert.deepEqual(suggerisciNote(note, 'Panificio'), []); // già scritta per intero
   assert.equal(suggerisciNote(note, '', 2).length, 2);
 });
+
+// ---- Risparmio spiegato (foglio che si apre dalla scheda Risparmio di Mese) ----
+
+test('riepilogoRisparmio: entrate, spese, differenza, parte rimasta e quanto è andato sugli investimenti', async () => {
+  const { riepilogoRisparmio } = await import('../js/model/calcoli.js');
+  const movimenti = [
+    { tipo: 'entrata', importo: 200000, contoId: 'principale' },
+    { tipo: 'spesa', importo: 50000, contoId: 'principale' },
+    { tipo: 'trasferimento', importo: 30000, contoId: 'principale', contoDestinazioneId: 'broker' },
+    { tipo: 'trasferimento', importo: 9000, contoId: 'principale', contoDestinazioneId: 'secondario' }, // tra conti normali: non conta
+    { tipo: 'trasferimento', importo: 7000, contoId: 'broker', contoDestinazioneId: 'fondo' }, // tra investimenti: non conta
+  ];
+  assert.deepEqual(riepilogoRisparmio(movimenti, conti), { entrate: 200000, spese: 50000, risparmio: 150000, tasso: 75, versoInvestimenti: 30000 });
+});
+
+test('riepilogoRisparmio: senza entrate la percentuale non esiste; spendendo più delle entrate è negativa', async () => {
+  const { riepilogoRisparmio } = await import('../js/model/calcoli.js');
+  assert.deepEqual(riepilogoRisparmio([], conti), { entrate: 0, spese: 0, risparmio: 0, tasso: null, versoInvestimenti: 0 });
+  assert.equal(riepilogoRisparmio([{ tipo: 'spesa', importo: 100, contoId: 'principale' }], conti).tasso, null);
+  const sotto = riepilogoRisparmio([{ tipo: 'entrata', importo: 1000, contoId: 'principale' }, { tipo: 'spesa', importo: 1500, contoId: 'principale' }], conti);
+  assert.equal(sotto.risparmio, -500);
+  assert.equal(sotto.tasso, -50);
+});

@@ -6,7 +6,7 @@
 
 // Va tenuta uguale a VERSIONE_APP in js/versione.js (lo verifica un test).
 // Cambiarla a ogni rilascio: cambia il nome della cache e i file vengono riscaricati.
-const VERSIONE = '2.2.0';
+const VERSIONE = '2.3.0';
 const PREFISSO_CACHE = 'spese2-';
 const CACHE = `${PREFISSO_CACHE}${VERSIONE}`;
 
@@ -92,6 +92,8 @@ const FILE = [
   'js/components/ciambella.js',
   'js/components/dettaglio-categoria.js',
   'js/components/dettaglio-conto.js',
+  'js/components/dettaglio-ripartizione.js',
+  'js/components/dettaglio-risparmio.js',
   'js/components/editor-categoria.js',
   'js/components/editor-ricorrente.js',
   'js/components/editor-conto.js',

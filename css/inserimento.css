@@ -74,7 +74,7 @@
   align-items: center;
   gap: 6px;
   min-height: var(--tocco);
-  padding: var(--sp-1) 2px;
+  padding: var(--sp-1) 4px; /* 8px tra un nome e l'altro: i nomi lunghi non si toccano */
   border-radius: var(--r-m);
 }
 .cat-voce .cerchio { transition: transform var(--dur-1) var(--ease), background var(--dur-1), color var(--dur-1), box-shadow var(--dur-1); }
@@ -89,6 +89,7 @@
   font-weight: 550;
   line-height: 1.15;
   text-align: center;
+  letter-spacing: -0.01em;
   color: var(--testo-2);
 }
 .cat-voce[aria-checked="true"] .cerchio {
@@ -168,17 +169,20 @@
 
 /* ---- Tastierino ---- */
 .ins-tastierino { flex: none; padding: var(--sp-2) var(--sp-3) 0; }
-.tastierino { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-1); }
+.tastierino { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+/* I tasti hanno lo stesso rilievo di chip e pulsanti: si vede dove toccare e "scendono" al tocco. */
 .tasto {
   display: grid;
   place-items: center;
   height: 46px;
   border-radius: var(--r-m);
+  background: var(--scheda-2);
+  box-shadow: var(--ombra-rialzo);
   font-size: 1.5rem;
   font-weight: 550;
-  transition: background var(--dur-1);
+  transition: background var(--dur-1), transform var(--dur-1) var(--ease), box-shadow var(--dur-1);
 }
-.tasto:active { background: var(--scheda-3); }
+.tasto:active { background: var(--scheda-3); transform: scale(0.96); box-shadow: var(--ombra-incasso); }
 .tasto-azione { color: var(--testo-2); }
 
 /* ---- Salva ---- */

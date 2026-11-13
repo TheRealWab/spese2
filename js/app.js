@@ -65,7 +65,6 @@ function aggiornaPromemoriaBackup() {
   else voce.removeAttribute('aria-label');
 }
 
-/** Cambio d'area chiesto dall'utente (tocco sulla barra): aggiorna la cronologia e la schermata. */
 /**
  * La barra in basso resta ferma ma si compatta (solo icone) quando si scorre verso il basso e si riespande
  * (icone e nomi) quando si risale o si torna in cima. Il pulsante + la segue.
@@ -91,6 +90,7 @@ function inizializzaBarra() {
   }, { passive: true });
 }
 
+/** Cambio d'area chiesto dall'utente (tocco sulla barra): aggiorna la cronologia e la schermata. */
 function naviga(id) {
   const rotta = ROTTE.find((r) => r.id === id) ?? ROTTE[0];
   if (rotta === rottaCorrente) {
@@ -345,6 +345,13 @@ async function avvia() {
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') aggiornaPromemoriaBackup(); });
   document.addEventListener('spese2:categorie', (e) => istanza?.aggiorna?.({ evento: 'categorie', ...e.detail }));
   document.addEventListener('spese2:conti', (e) => istanza?.aggiorna?.({ evento: 'conti', ...e.detail }));
+  // Una schermata chiede di passare a un'altra area, magari già impostata (da Mese a Categorie sullo stesso periodo).
+  document.addEventListener('spese2:vai', (e) => {
+    const rotta = ROTTE.find((r) => r.id === e.detail?.rotta);
+    if (!rotta) return;
+    rotta.vista.preimposta?.(e.detail);
+    naviga(rotta.id);
+  });
   // Un ricorrente nuovo, modificato o ripreso si elabora subito (le sue scadenze passate si registrano senza aspettare).
   document.addEventListener('spese2:ricorrenti', (e) => {
     istanza?.aggiorna?.({ evento: 'ricorrenti', ...e.detail });
@@ -358,7 +365,6 @@ async function avvia() {
   });
 
   eseguiRicorrenti();
-  navigator.storage?.persist?.().catch(() => {}); // chiede al browser di non cancellare i dati se serve spazio
   registraServiceWorker();
 }
 

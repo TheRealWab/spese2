@@ -25,6 +25,56 @@ export const TIPI_CONTO = ['conto', 'liquidità', 'investimenti', 'altro'];
 export const ETICHETTA_TIPO_CONTO = { conto: 'Conto', 'liquidità': 'Liquidità', investimenti: 'Investimenti', altro: 'Altro' };
 export const LUNGHEZZA_MAX_NOME_CONTO = 30;
 
+// ---- Investimenti: rischio ed etichetta ----
+// Ogni conto investimenti può avere un livello di rischio (decide come si divide la barra del Patrimonio) e
+// un'etichetta libera più precisa («ETF», «BTP»…), che serve a raggruppare dentro lo stesso livello.
+// Stanno sul conto perché l'app conosce un valore per conto, non i singoli titoli.
+
+export const RISCHI = ['alto', 'basso'];
+export const ETICHETTA_RISCHIO = { alto: 'Alto rischio', basso: 'Basso rischio' };
+export const DESCRIZIONE_RISCHIO = { alto: 'ETF azionari, azioni, crypto…', basso: 'Obbligazioni, titoli di Stato, conti deposito…' };
+export const LUNGHEZZA_MAX_ETICHETTA = 20;
+/** Proposte per chi non ha ancora scritto nessuna etichetta. */
+export const ETICHETTE_PROPOSTE = { alto: ['ETF', 'Azioni', 'Crypto'], basso: ['Obbligazioni', 'BTP', 'Conto deposito'] };
+
+export const pulisciEtichetta = (testo) => String(testo ?? '').trim().replace(/\s+/g, ' ').slice(0, LUNGHEZZA_MAX_ETICHETTA);
+
+/** Rischio ed etichetta così come si salvano: solo i conti investimenti li hanno, e solo con valori validi. */
+export function normalizzaClasse({ tipo, rischio, etichetta }) {
+  if (tipo !== 'investimenti') return { rischio: null, etichetta: '' };
+  return { rischio: RISCHI.includes(rischio) ? rischio : null, etichetta: pulisciEtichetta(etichetta) };
+}
+
+/**
+ * Le etichette già scritte sui conti investimenti, dalla più usata. «ETF» ed «etf» sono la stessa: vale la grafia
+ * più usata (a parità, la prima incontrata), così non nascono doppioni per una maiuscola.
+ */
+export function etichetteUsate(conti) {
+  const perChiave = new Map();
+  for (const c of conti) {
+    const etichetta = c.tipo === 'investimenti' ? pulisciEtichetta(c.etichetta) : '';
+    if (!etichetta) continue;
+    const chiave = etichetta.toLowerCase();
+    const voce = perChiave.get(chiave) ?? { usi: 0, grafie: new Map() };
+    voce.usi += 1;
+    voce.grafie.set(etichetta, (voce.grafie.get(etichetta) ?? 0) + 1);
+    perChiave.set(chiave, voce);
+  }
+  return [...perChiave.values()]
+    .sort((a, b) => b.usi - a.usi)
+    .map((voce) => [...voce.grafie.entries()].reduce((migliore, g) => (g[1] > migliore[1] ? g : migliore))[0]);
+}
+
+/**
+ * L'etichetta scritta, ma con la grafia già usata sugli altri conti se esiste, oppure quella delle proposte
+ * (scrivendo «etf» si ottiene «ETF»). Una parola nuova resta com'è stata scritta.
+ */
+export function etichettaCoerente(testo, conti) {
+  const pulita = pulisciEtichetta(testo);
+  const note = [...etichetteUsate(conti), ...ETICHETTE_PROPOSTE.alto, ...ETICHETTE_PROPOSTE.basso];
+  return note.find((e) => e.toLowerCase() === pulita.toLowerCase()) ?? pulita;
+}
+
 /** Nome ripulito: niente spazi ai bordi né doppi. */
 export const pulisciNomeConto = (nome) => String(nome ?? '').trim().replace(/\s+/g, ' ');
 

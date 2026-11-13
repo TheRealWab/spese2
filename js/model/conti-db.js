@@ -1,14 +1,16 @@
 // Gestione dei conti e dei valori degli investimenti nel database (SPEC §6.3). Le regole stanno in conti.js e
 // patrimonio.js (funzioni pure e testate); qui si leggono i dati, si applicano e si avvisano le viste.
 
-import { tutti, leggi, salva, elimina } from '../db.js';
+import { tutti, leggi, salva, elimina, applicaModifiche } from '../db.js';
 import { nuovoId } from '../util/id.js';
 import { esisteIcona } from '../util/icone.js';
 import { oggiIso } from '../util/date.js';
 import { caricaCatalogo } from './catalogo.js';
 import { impostazioni } from './impostazioni.js';
 import { COLORI_CATEGORIA } from './palette.js';
-import { validaConto, validaValore, puoArchiviareConto, pulisciNomeConto, prossimoOrdineConto } from './conti.js';
+import {
+  validaConto, validaValore, puoArchiviareConto, pulisciNomeConto, prossimoOrdineConto, normalizzaClasse, etichettaCoerente,
+} from './conti.js';
 
 /** Errore con un messaggio già pronto da mostrare all'utente. */
 export class ErroreConto extends Error {}
@@ -32,13 +34,20 @@ async function trova(id) {
 
 export const tuttiIValori = () => tutti('valoriInvestimento');
 
-export async function creaConto({ nome, tipo, icona, colore, saldoIniziale, dataSaldoIniziale }) {
+/** Rischio ed etichetta da salvare: valori puliti, e l'etichetta con la grafia già usata sugli altri conti. */
+function classeDaSalvare({ tipo, rischio, etichetta }, altriConti) {
+  const classe = normalizzaClasse({ tipo, rischio, etichetta });
+  return { rischio: classe.rischio, etichetta: etichettaCoerente(classe.etichetta, altriConti) };
+}
+
+export async function creaConto({ nome, tipo, icona, colore, saldoIniziale, dataSaldoIniziale, rischio = null, etichetta = '' }) {
   const esistenti = await tutti('conti');
   const errore = validaConto({ nome, tipo, saldoIniziale, dataSaldoIniziale }, esistenti);
   if (errore) throw new ErroreConto(errore);
   controllaIconaEColore(icona, colore);
   const conto = {
     id: nuovoId(), nome: pulisciNomeConto(nome), tipo, icona, colore, saldoIniziale, dataSaldoIniziale,
+    ...classeDaSalvare({ tipo, rischio, etichetta }, esistenti),
     ordine: prossimoOrdineConto(esistenti), archiviato: false,
   };
   await salva('conti', conto);
@@ -46,13 +55,21 @@ export async function creaConto({ nome, tipo, icona, colore, saldoIniziale, data
   return conto;
 }
 
-/** Cambia nome, icona, colore e saldo iniziale. Il tipo e la posizione restano quelli di prima. */
-export async function aggiornaConto(id, { nome, icona, colore, saldoIniziale, dataSaldoIniziale }) {
+/**
+ * Cambia nome, icona, colore, saldo iniziale e, per gli investimenti, rischio ed etichetta (se non vengono passati
+ * restano quelli di prima). Il tipo e la posizione restano quelli di prima.
+ */
+export async function aggiornaConto(id, { nome, icona, colore, saldoIniziale, dataSaldoIniziale, rischio, etichetta }) {
   const [attuale, esistenti] = await Promise.all([trova(id), tutti('conti')]);
   const errore = validaConto({ nome, tipo: attuale.tipo, saldoIniziale, dataSaldoIniziale }, esistenti, { escludiId: id });
   if (errore) throw new ErroreConto(errore);
   controllaIconaEColore(icona, colore);
-  const conto = { ...attuale, nome: pulisciNomeConto(nome), icona, colore, saldoIniziale, dataSaldoIniziale };
+  const classe = classeDaSalvare({
+    tipo: attuale.tipo,
+    rischio: rischio === undefined ? attuale.rischio : rischio,
+    etichetta: etichetta === undefined ? attuale.etichetta : etichetta,
+  }, esistenti.filter((c) => c.id !== id));
+  const conto = { ...attuale, nome: pulisciNomeConto(nome), icona, colore, saldoIniziale, dataSaldoIniziale, ...classe };
   await salva('conti', conto);
   await avvisa({ azione: 'modificato', id });
   return conto;
@@ -94,9 +111,12 @@ export async function aggiornaValore(id, { data, valore }) {
   const errore = validaValore({ valore, data }, oggiIso());
   if (errore) throw new ErroreConto(errore);
   const stessaData = (await tuttiIValori()).find((v) => v.contoId === attuale.contoId && v.data === data && v.id !== id);
-  if (stessaData) await elimina('valoriInvestimento', stessaData.id);
   const record = { ...attuale, data, valore };
-  await salva('valoriInvestimento', record);
+  // Un'unica operazione: o si toglie il vecchio valore di quel giorno e si salva questo, o non cambia nulla.
+  await applicaModifiche({
+    salva: { valoriInvestimento: [record] },
+    elimina: { valoriInvestimento: stessaData ? [stessaData.id] : [] },
+  });
   await avvisa({ azione: 'valore', id: attuale.contoId });
   return record;
 }

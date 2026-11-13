@@ -7,7 +7,7 @@ import { esc } from '../util/dom.js';
 import { icona } from '../util/icone.js';
 import { oggiIso } from '../util/date.js';
 import { scaricaFile } from '../util/scarica.js';
-import { LUNGHEZZA_MINIMA_PASSWORD, nomeFileBackup } from '../model/backup.js';
+import { LUNGHEZZA_MINIMA_PASSWORD, nomeFileBackup, ErroreBackup } from '../model/backup.js';
 import { creaBackup, segnaBackupFatto } from '../model/backup-db.js';
 import {
   sceltaFileDisponibile, leggiFileBackup, ricordaFileBackup, dimenticaFileBackup, scegliNuovoFile,
@@ -124,7 +124,7 @@ export function apriEsportaBackup() {
 
   function corpoAttesa() {
     return {
-      html: `<div class="stato-vuoto flusso-attesa" role="status">${icona('refresh-cw', 32)}<h2>Cifratura in corso…</h2><p>Può servire qualche secondo.</p></div>`,
+      html: `<div class="stato-vuoto flusso-attesa" role="status">${icona('refresh-cw', 32)}<h2>Cifratura e verifica in corso…</h2><p>Il backup viene creato e subito riaperto per controllo. Può servire qualche secondo.</p></div>`,
       piede: '',
     };
   }
@@ -206,7 +206,8 @@ export function apriEsportaBackup() {
     } catch (e) {
       console.error(e);
       stato.fase = 'form';
-      stato.errore = file ? 'Non sono riuscito a scrivere il file. Riprova, magari scegliendo un\'altra posizione.' : 'Non sono riuscito a creare il backup. Riprova.';
+      if (e instanceof ErroreBackup) stato.errore = `Il backup creato non ha superato la verifica, quindi non è stato salvato. ${e.message}`;
+      else stato.errore = file ? 'Non sono riuscito a scrivere il file. Riprova, magari scegliendo un\'altra posizione.' : 'Non sono riuscito a creare il backup. Riprova.';
     }
     disegna();
   }

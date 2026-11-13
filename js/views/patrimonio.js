@@ -12,8 +12,8 @@ import { tutti } from '../db.js';
 import { tuttiIConti } from '../model/conti.js';
 import { periodoContenente, periodoValido } from '../model/periodi.js';
 import {
-  creaStorie, patrimonioAl, ripartizioneInvestito, riepilogoInvestimento, variazioneRispettoAMeseFa, serieAndamento, primaDataConDati,
-  intervalloGrafico, etichettaAggiornamento,
+  creaStorie, patrimonioAl, ripartizionePatrimonio, gruppoDelConto, NOME_GRUPPO, riepilogoInvestimento, variazioneRispettoAMeseFa,
+  serieAndamento, primaDataConDati, intervalloGrafico, etichettaAggiornamento,
 } from '../model/patrimonio.js';
 import { ETICHETTA_TIPO_CONTO } from '../model/conti.js';
 import { creaSelettorePeriodo } from '../components/selettore-periodo.js';
@@ -22,6 +22,7 @@ import { apriDettaglioConto } from '../components/dettaglio-conto.js';
 import { apriAggiornaValore } from '../components/aggiorna-valore.js';
 import { apriEditorConto } from '../components/editor-conto.js';
 import { apriGestioneConti } from '../components/gestione-conti.js';
+import { apriDettaglioRipartizione } from '../components/dettaglio-ripartizione.js';
 
 // Stato che sopravvive al cambio di area: tornando su Patrimonio si ritrova lo stesso periodo.
 let periodo = null;
@@ -32,10 +33,7 @@ const classeVariazione = (cent) => (cent > 0 ? 'pt-su' : (cent < 0 ? 'pt-giu' : 
 export function monta(radice) {
   radice.classList.add('vista-patrimonio');
   radice.innerHTML = `
-    <div class="pt-testata">
-      <h1 class="vista-titolo">Patrimonio</h1>
-      <button type="button" class="btn-icona pt-occhio" data-az="occhio"></button>
-    </div>
+    <h1 class="solo-sr">Patrimonio</h1>
     <div class="mese-contenuto" data-r="contenuto"></div>`;
 
   const contenuto = $('[data-r="contenuto"]', radice);
@@ -47,12 +45,10 @@ export function monta(radice) {
   let grafico = null;
   let sequenza = 0;
 
-  function disegnaOcchio() {
+  /** L'occhio che nasconde gli importi: sta in alto a destra nella scheda del totale. */
+  function htmlOcchio() {
     const nascosti = importiNascosti();
-    const pulsante = $('[data-az="occhio"]', radice);
-    pulsante.innerHTML = icona(nascosti ? 'eye-off' : 'eye', 24);
-    pulsante.setAttribute('aria-pressed', String(nascosti));
-    pulsante.setAttribute('aria-label', nascosti ? 'Mostra gli importi' : 'Nascondi gli importi');
+    return `<button type="button" class="btn-icona pt-occhio" data-az="occhio" aria-pressed="${nascosti}" aria-label="${nascosti ? 'Mostra gli importi' : 'Nascondi gli importi'}">${icona(nascosti ? 'eye-off' : 'eye', 22)}</button>`;
   }
 
   async function carica() {
@@ -73,33 +69,40 @@ export function monta(radice) {
     const totale = patrimonioAl(dati.storie, dati.oggi);
     return `
       <section class="scheda indicatore pt-hero">
-        <p class="ind-et">Patrimonio totale</p>
+        <div class="pt-hero-testa"><p class="ind-et">Patrimonio totale</p>${htmlOcchio()}</div>
         <div class="ind-riga"><span class="ind-valore" data-r="totale" ${attrCifra('totale', totale, 'compatto', true)}>${esc(mostraImporto(totale, euroCompatto))}</span></div>
         <p class="pt-variazione ${classeVariazione(segnoCent)}">${icona(segnoCent < 0 ? 'trending-down' : 'trending-up', 18)}<span><span ${attrCifra('variazione', segnoCent, 'segno', true)}>${esc(importo)}</span>${esc(percentuale)} nell'ultimo mese</span></p>
         ${htmlRipartizione()}
       </section>`;
   }
 
-  /** La barra "investito / liquidità" sotto il totale (assente se il patrimonio non è divisibile in modo sensato). */
+  /**
+   * La barra sotto il totale: investimenti ad alto e basso rischio, quelli ancora da classificare e la liquidità.
+   * Assente se il patrimonio non è divisibile in modo sensato o se c'è un gruppo solo (non direbbe nulla).
+   * Ogni voce della legenda si tocca per vedere i conti del gruppo, raccolti per etichetta.
+   */
   function htmlRipartizione() {
-    const r = ripartizioneInvestito(dati.storie, dati.oggi);
-    if (!r) return '';
-    const voce = (classe, nome, percentuale, cent) => `
-      <div class="pt-rip-voce">
-        <span class="pt-rip-punto ${classe}"></span>
-        <span class="pt-rip-testo"><span class="pt-rip-nome">${nome} <strong>${percentuale}%</strong></span><span class="pt-rip-importo" ${attrCifra(`rip:${nome}`, cent, 'euro', true)}>${esc(mostraImporto(cent))}</span></span>
-      </div>`;
+    const r = ripartizionePatrimonio(dati.storie, dati.oggi);
+    if (!r || r.voci.length < 2) return '';
+    const voce = (v) => `
+      <button type="button" class="pt-rip-voce" data-gruppo="${v.gruppo}" aria-label="${NOME_GRUPPO[v.gruppo]}, ${v.percentuale}%: vedi i conti">
+        <span class="pt-rip-punto pt-seg-${v.gruppo}"></span>
+        <span class="pt-rip-testo"><span class="pt-rip-nome">${NOME_GRUPPO[v.gruppo]}</span><span class="pt-rip-importo"><strong>${v.percentuale}%</strong> · <span ${attrCifra(`rip:${v.gruppo}`, v.importo, 'euro', true)}>${esc(mostraImporto(v.importo))}</span></span></span>
+      </button>`;
     return `
-      <div class="pt-rip" role="group" aria-label="Divisione tra investito e liquidità">
-        <div class="pt-rip-barra" role="img" aria-label="Investito ${r.percentualeInvestito}%, liquidità ${r.percentualeNonInvestito}%">
-          <span class="pt-rip-seg pt-inv-seg" style="flex:${Math.max(r.percentualeInvestito, r.investito > 0 ? 2 : 0)}"></span>
-          <span class="pt-rip-seg pt-non-seg" style="flex:${Math.max(r.percentualeNonInvestito, r.nonInvestito > 0 ? 2 : 0)}"></span>
+      <div class="pt-rip" role="group" aria-label="Come è diviso il patrimonio">
+        <div class="pt-rip-barra" role="img" aria-label="${r.voci.map((v) => `${NOME_GRUPPO[v.gruppo]} ${v.percentuale}%`).join(', ')}">
+          ${r.voci.map((v) => `<span class="pt-rip-seg pt-seg-${v.gruppo}" style="flex:${Math.max(v.percentuale, 2)}"></span>`).join('')}
         </div>
-        <div class="pt-rip-legenda">
-          ${voce('pt-inv-seg', 'Investito', r.percentualeInvestito, r.investito)}
-          ${voce('pt-non-seg', 'Liquidità', r.percentualeNonInvestito, r.nonInvestito)}
-        </div>
+        <div class="pt-rip-legenda">${r.voci.map(voce).join('')}</div>
       </div>`;
+  }
+
+  /** «Alto rischio · ETF», «Basso rischio», oppure l'invito a classificare. */
+  function sottotitoloInvestimento(conto) {
+    const gruppo = gruppoDelConto(conto);
+    if (gruppo === 'da-classificare') return '<span class="badge badge-avviso">Da classificare</span>';
+    return esc([NOME_GRUPPO[gruppo], conto.etichetta].filter(Boolean).join(' · '));
   }
 
   function htmlRigaConto(conto) {
@@ -120,7 +123,7 @@ export function monta(radice) {
       <section class="scheda pt-inv" data-conto="${esc(conto.id)}">
         <button type="button" class="pt-inv-testa" data-conto="${esc(conto.id)}">
           ${cerchioIcona(conto.icona, conto.colore, 44)}
-          <span class="riga-testo"><span class="riga-titolo">${esc(conto.nome)}</span><span class="riga-sotto">Investimenti</span></span>
+          <span class="riga-testo"><span class="riga-titolo">${esc(conto.nome)}</span><span class="riga-sotto">${sottotitoloInvestimento(conto)}</span></span>
           ${icona('chevron-right', 18)}
         </button>
         <dl class="pt-inv-dati">
@@ -146,7 +149,6 @@ export function monta(radice) {
 
   function disegna() {
     if (!dati) return;
-    disegnaOcchio();
     const attivi = dati.conti.filter((c) => !c.archiviato);
     const normali = attivi.filter((c) => c.tipo !== 'investimenti');
     const investimenti = attivi.filter((c) => c.tipo === 'investimenti');
@@ -208,6 +210,8 @@ export function monta(radice) {
   radice.addEventListener('click', (e) => {
     const az = e.target.closest('[data-az]')?.dataset.az;
     const contoId = e.target.closest('[data-conto]')?.dataset.conto;
+    const gruppo = e.target.closest('[data-gruppo]')?.dataset.gruppo;
+    if (gruppo) { apriDettaglioRipartizione({ gruppo }); return; }
     if (az === 'occhio') { salvaImpostazioni({ nascondiImportiPatrimonio: !importiNascosti() }).catch(console.error); return; }
     if (az === 'nuovo') { apriEditorConto({}); return; }
     if (az === 'gestisci') { apriGestioneConti(); return; }
@@ -215,7 +219,6 @@ export function monta(radice) {
     if (contoId) apriDettaglioConto({ contoId });
   });
 
-  disegnaOcchio();
   carica();
 
   return {

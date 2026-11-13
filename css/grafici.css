@@ -1,9 +1,6 @@
 /* Area Grafici: selettore del periodo, ciambella, barre nel tempo. */
 
 .vista-grafici { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); } /* minmax: la riga scorrevole dei modi non deve allargare la pagina */
-.gf-selettore { padding: var(--sp-4); }
-.gf-selettore .mese-testata { margin-bottom: var(--sp-2); }
-.gf-selettore .sel-modi { margin-bottom: 0; }
 
 /* Con molti modi la riga dei pulsanti scorre di lato. */
 .sel-scorri {
@@ -14,6 +11,10 @@
 }
 .sel-scorri::-webkit-scrollbar { display: none; }
 .sel-scorri button { flex: none; scroll-snap-align: center; padding: 0 var(--sp-4); }
+/* Dove la riga continua oltre il bordo, sfuma (vedi segnalaAltro in selettore-periodo.js). */
+.sel-scorri[data-altro="destra"] { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); }
+.sel-scorri[data-altro="sinistra"] { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent); }
+.sel-scorri[data-altro="entrambi"] { -webkit-mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent); }
 .sel-date { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3); margin-top: var(--sp-3); }
 .sel-date .campo { min-width: 0; }
 .sel-date .campo-data { width: 100%; min-width: 0; box-sizing: border-box; }

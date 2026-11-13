@@ -42,9 +42,19 @@ export function creaSelettorePeriodo(contenitore, { periodo, giornoInizio, alCam
         </div>
         <p class="sel-errore" role="alert" ${errore ? '' : 'hidden'}>${esc(errore)}</p>` : ''}`;
     if (scorrevole) {
-      const attivo = contenitore.querySelector('.sel-modi [aria-pressed="true"]');
+      const riga = contenitore.querySelector('.sel-modi');
+      const attivo = riga.querySelector('[aria-pressed="true"]');
       attivo?.scrollIntoView?.({ inline: 'center', block: 'nearest' });
+      riga.addEventListener('scroll', () => segnalaAltro(riga), { passive: true });
+      segnalaAltro(riga);
     }
+  }
+
+  /** Dove la riga continua oltre il bordo si mette una sfumatura (css): si capisce che si può scorrere. */
+  function segnalaAltro(riga) {
+    const sinistra = riga.scrollLeft > 4;
+    const destra = riga.scrollLeft + riga.clientWidth < riga.scrollWidth - 4;
+    riga.dataset.altro = sinistra && destra ? 'entrambi' : (sinistra ? 'sinistra' : (destra ? 'destra' : ''));
   }
 
   function imposta(nuovo, direzione = 0) {

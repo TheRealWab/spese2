@@ -8,16 +8,27 @@ import { esc, movimentoRidotto } from '../util/dom.js';
 
 const pila = [];
 let contatore = 0;
-let attesaIndietro = null; // Promise finché un history.back() fatto da noi non è concluso
-let risolviIndietro = null;
+// Quanti history.back() fatti da noi aspettano ancora il loro popstate. È un conteggio e non un sì/no perché due
+// pannelli possono chiudersi nello stesso istante (la conferma e la schermata che l'ha chiesta): ogni "indietro"
+// produce il suo popstate, e nessuno dei due va scambiato per il tasto indietro dell'utente (chiuderebbe anche il
+// pannello che sta sotto).
+let indietroInSospeso = 0;
+let attesaIndietro = null; // Promise finché i nostri history.back() non sono conclusi
+let liberaAttesa = null;
+let timerRipiego = null;
 
 function tornaIndietroNellaCronologia() {
-  attesaIndietro = new Promise((ok) => {
-    risolviIndietro = ok;
-    setTimeout(ok, 500); // ripiego: se popstate non arriva, non blocchiamo i pannelli successivi
-  });
+  indietroInSospeso += 1;
+  if (!attesaIndietro) {
+    attesaIndietro = new Promise((ok) => {
+      liberaAttesa = () => { clearTimeout(timerRipiego); attesaIndietro = null; liberaAttesa = null; ok(); };
+    });
+  }
+  // Ripiego: se un popstate non arriva, non blocchiamo i pannelli successivi (il conteggio resta: il prossimo
+  // popstate verrà ancora preso per nostro).
+  clearTimeout(timerRipiego);
+  timerRipiego = setTimeout(() => liberaAttesa?.(), 500);
   history.back();
-  return attesaIndietro;
 }
 
 // Chiamato quando "indietro" non riguarda né un pannello né una chiusura fatta da noi:
@@ -29,11 +40,9 @@ export function impostaGestoreIndietro(funzione) {
 
 // Un solo ascoltatore di popstate per tutto: così pannelli e app non si contendono lo stesso evento.
 window.addEventListener('popstate', () => {
-  if (risolviIndietro) {
-    const ok = risolviIndietro;
-    risolviIndietro = null;
-    attesaIndietro = null;
-    ok();
+  if (indietroInSospeso > 0) {
+    indietroInSospeso -= 1;
+    if (indietroInSospeso === 0) liberaAttesa?.();
     return;
   }
   const inCima = pila[pila.length - 1];
